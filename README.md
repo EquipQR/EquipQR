@@ -2,6 +2,8 @@
 
 ## Environment Setup
 
+### TODO
+
 ---
 
 ### Frontend
@@ -88,3 +90,34 @@ To build and run the backend in production mode:
    The backend will be live at `http://localhost:8080` by default, unless otherwise specified in the environment setup.
 
 Ensure that your environment is properly configured with necessary configuration files and environment variables for a smooth deployment.
+Here's the updated and professional documentation with a section for Docker setup:
+
+---
+
+### Docker Setup
+
+#### Running with Docker
+
+To run EquipQR using Docker, follow these steps **after completing the environment setup**:
+
+1. **Ensure Environment Setup**
+
+   * Follow the steps outlined above to configure your environment and install dependencies.
+
+2. **Run Docker Compose**
+
+   * In the root directory of the project, execute the following command to start all services in the background:
+
+     ```bash
+     docker compose up -d
+     ```
+
+3. **View Docker Logs**
+
+   * To view logs from the Docker containers, run:
+
+     ```bash
+     docker compose logs -f
+     ```
+
+   The `docker-compose.yml` file in the project root directory defines the necessary configuration for running the application in containers.
