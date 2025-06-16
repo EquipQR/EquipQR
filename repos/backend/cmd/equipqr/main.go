@@ -44,6 +44,7 @@ func main() {
 	handlers.RegisterEquipmentRoutes(app)
 	handlers.RegisterBusinessRoutes(app)
 	handlers.RegisterIssueRoutes(app)
+	handlers.RegisterQRCodeRoutes(app)
 
 	if config.SSL_CertPath == "" || config.SSL_KeyPath == "" {
 		log.Fatal("SSL_CERT or SSL_KEY environment variables are not set")
