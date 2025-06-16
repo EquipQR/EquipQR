@@ -28,6 +28,19 @@ func RegisterEquipmentRoutes(app *fiber.App) {
 		return c.JSON(issues)
 	})
 
+	app.Get("/equipment/:id", func(c *fiber.Ctx) error {
+		id := c.Params("id")
+
+		eq, err := repositories.GetEquipmentByID(id)
+		if err != nil {
+			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+				"error": "equipment not found",
+			})
+		}
+
+		return c.JSON(eq)
+	})
+
 	app.Post("/equipment", utils.ValidateBody[CreateEquipmentRequest](), func(c *fiber.Ctx) error {
 		req := c.Locals("body").(CreateEquipmentRequest)
 

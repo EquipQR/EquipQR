@@ -1,2 +1,5 @@
 .env
 .idea
+
+# SSL keys and certs
+**/*.pem

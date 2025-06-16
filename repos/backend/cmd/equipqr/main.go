@@ -8,14 +8,20 @@ import (
 	"github.com/EquipQR/equipqr/backend/internal/handlers"
 	"github.com/EquipQR/equipqr/backend/internal/utils"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
+	"github.com/joho/godotenv"
 )
 
 func main() {
+	if err := godotenv.Load(); err != nil {
+		log.Println("Warning: No .env file found")
+	}
+
 	if err := utils.InitPikaGenerator(1); err != nil {
 		log.Fatalf("Failed to initialize Pika ID generator: %v", err)
 	}
 
-	config := database.LoadConfigFromEnv()
+	config := utils.LoadConfigFromEnv()
 	database.Init(config)
 
 	database.Migrate(
@@ -28,12 +34,20 @@ func main() {
 
 	app := fiber.New()
 
-	// Register routes
+	app.Use(cors.New(cors.Config{
+		AllowOrigins: config.CORSAllowOrigins,
+		AllowHeaders: config.CORSAllowHeaders,
+	}))
+
 	handlers.RegisterHealthRoutes(app)
 	handlers.RegisterUserRoutes(app)
 	handlers.RegisterEquipmentRoutes(app)
 	handlers.RegisterBusinessRoutes(app)
 	handlers.RegisterIssueRoutes(app)
 
-	log.Fatal(app.Listen(":8080"))
+	if config.SSL_CertPath == "" || config.SSL_KeyPath == "" {
+		log.Fatal("SSL_CERT or SSL_KEY environment variables are not set")
+	}
+
+	log.Fatal(app.ListenTLS("0.0.0.0:8080", config.SSL_CertPath, config.SSL_KeyPath))
 }
