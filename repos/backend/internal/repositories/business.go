@@ -14,3 +14,7 @@ func GetBusinessByID(id string) (*models.Business, error) {
 
 	return &business, nil
 }
+
+func CreateBusiness(business *models.Business) error {
+	return database.DB.Create(business).Error
+}
