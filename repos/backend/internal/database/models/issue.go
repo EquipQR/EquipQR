@@ -10,6 +10,6 @@ type Issue struct {
 	AssigneeID    string     `gorm:"not null;index"`
 	DateSubmitted time.Time  `gorm:"not null"`
 	DateCompleted *time.Time `gorm:"default:null"`
-	Equipment Equipment `gorm:"foreignKey:EquipmentID;constraint:OnDelete:CASCADE"`
-	Assignee  User      `gorm:"foreignKey:AssigneeID;constraint:OnDelete:SET NULL"`
+	Equipment     Equipment  `gorm:"foreignKey:EquipmentID;constraint:OnDelete:CASCADE"`
+	Assignee      User       `gorm:"foreignKey:AssigneeID;constraint:OnDelete:SET NULL"`
 }

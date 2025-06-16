@@ -23,12 +23,12 @@ func main() {
 
 	app := fiber.New()
 
-	app.Get("/", func(c *fiber.Ctx) error {
-		return c.SendString("Status: Healthy")
-	})
-
-	// ✅ Attach equipment routes
-	handlers.RegisterGeneralRoutes(app)
+	// Register routes
+	handlers.RegisterHealthRoutes(app)
+	handlers.RegisterUserRoutes(app)
+	handlers.RegisterEquipmentRoutes(app)
+	handlers.RegisterBusinessRoutes(app)
+	handlers.RegisterIssueRoutes(app)
 
 	log.Fatal(app.Listen(":8080"))
 }
