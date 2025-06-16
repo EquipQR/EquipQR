@@ -7,14 +7,16 @@ import (
 	"time"
 )
 
+var PikaGenerator *Generator
+
 const (
-	epoch           int64 = 1685577600000 // Custom epoch: June 1, 2023 (ms)
-	nodeIDBits            = 10
-	sequenceBits          = 12
-	maxNodeID             = -1 ^ (-1 << nodeIDBits)
-	maxSequence           = -1 ^ (-1 << sequenceBits)
-	timeShift             = nodeIDBits + sequenceBits
-	nodeIDShift           = sequenceBits
+	epoch        int64 = 1685577600000 // Custom epoch: June 1, 2023 (ms)
+	nodeIDBits         = 10
+	sequenceBits       = 12
+	maxNodeID          = -1 ^ (-1 << nodeIDBits)
+	maxSequence        = -1 ^ (-1 << sequenceBits)
+	timeShift          = nodeIDBits + sequenceBits
+	nodeIDShift        = sequenceBits
 )
 
 type Generator struct {
@@ -22,6 +24,17 @@ type Generator struct {
 	lastTS   int64
 	sequence int64
 	mutex    sync.Mutex
+}
+
+func InitPikaGenerator(nodeID int64) error {
+	generatorInstance, err := NewGenerator(nodeID)
+
+	if err != nil {
+		return err
+	}
+
+	PikaGenerator = generatorInstance
+	return nil
 }
 
 func NewGenerator(nodeID int64) (*Generator, error) {
