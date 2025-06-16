@@ -24,3 +24,7 @@ func GetIssuesByEquipmentID(equipmentID string) ([]models.Issue, error) {
 
 	return issues, nil
 }
+
+func CreateIssue(issue *models.Issue) error {
+	return database.DB.Create(issue).Error
+}
