@@ -3,6 +3,8 @@ package utils
 import "os"
 
 type Config struct {
+	App_Host         string
+	App_Port         string
 	SSL_CertPath     string
 	SSL_KeyPath      string
 	CORSAllowOrigins string
@@ -18,6 +20,8 @@ type Config struct {
 
 func LoadConfigFromEnv() Config {
 	return Config{
+		App_Host:         getEnv("APP_HOST", "0.0.0.0"),
+		App_Port:         getEnv("APP_PORT", "8080"),
 		SSL_CertPath:     getEnv("SSL_CERT", ""),
 		SSL_KeyPath:      getEnv("SSL_KEY", ""),
 		CORSAllowOrigins: getEnv("CORS_ALLOW_ORIGINS", "*"),

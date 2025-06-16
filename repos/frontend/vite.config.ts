@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 export default defineConfig(({ mode }) => {
-  const env = loadEnv(mode, process.cwd(), '');
+  const env = loadEnv(mode, path.resolve(process.cwd(), '../../'), '');
 
   return {
     plugins: [react()],

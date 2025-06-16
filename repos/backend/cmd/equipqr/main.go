@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"path/filepath"
 
 	"github.com/EquipQR/equipqr/backend/internal/database"
 	"github.com/EquipQR/equipqr/backend/internal/database/models"
@@ -13,8 +14,9 @@ import (
 )
 
 func main() {
-	if err := godotenv.Load(); err != nil {
-		log.Println("Warning: No .env file found")
+	envPath := filepath.Join("..", "..", ".env")
+	if err := godotenv.Load(envPath); err != nil {
+		log.Println("Warning: No .env file found at", envPath)
 	}
 
 	if err := utils.InitPikaGenerator(1); err != nil {
@@ -50,5 +52,6 @@ func main() {
 		log.Fatal("SSL_CERT or SSL_KEY environment variables are not set")
 	}
 
-	log.Fatal(app.ListenTLS("0.0.0.0:8080", config.SSL_CertPath, config.SSL_KeyPath))
+	address := config.App_Host + ":" + config.App_Port
+	log.Fatal(app.ListenTLS(address, config.SSL_CertPath, config.SSL_KeyPath))
 }
