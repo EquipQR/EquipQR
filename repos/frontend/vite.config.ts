@@ -9,6 +9,8 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [react()],
     server: {
+      host: env.VITE_HOST || 'localhost',  // Default to 'localhost' if not defined
+      port: Number(env.VITE_PORT) || 3000, // Default to 3000 if not defined
       https: {
         key: fs.readFileSync(path.resolve(__dirname, env.VITE_SSL_KEY_PATH)),
         cert: fs.readFileSync(path.resolve(__dirname, env.VITE_SSL_CERT_PATH)),

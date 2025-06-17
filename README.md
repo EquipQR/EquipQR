@@ -2,122 +2,153 @@
 
 ## Environment Setup
 
-### TODO
+Before running the application, you’ll need to configure environment variables. For convenience, a `.env.example` file is provided at the root of the project. It contains default values that mirror how EquipQR is run on-site.
+
+### `.env.example` Overview (Short Explanation)
+
+* **Backend Configuration**
+
+  * `APP_HOST`, `APP_PORT`: Where the backend server listens.
+  * `SSL_CERT_PATH`, `SSL_KEY_PATH`: Path to TLS cert/key (required for HTTPS).
+  * `CORS_ALLOW_ORIGINS`, `CORS_ALLOW_HEADERS`: CORS policy for API access.
+
+* **Frontend Configuration**
+
+  * `VITE_HOST`, `VITE_PORT`: Where the frontend dev server runs.
+  * `VITE_SSL_KEY_PATH`, `VITE_SSL_CERT_PATH`: TLS cert/key used by Vite in dev mode.
+
+* **PostgreSQL Configuration**
+
+  * `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`: Database credentials.
+  * `POSTGRES_HOST`, `POSTGRES_PORT`: Database host and port (typically `localhost:5432`).
+
+To initialize your environment:
+
+```bash
+cp .env.example .env
+```
 
 ---
 
-### Frontend
+## SSL Certificates for HTTPS (Required)
 
-#### Running the Frontend (Development)
+EquipQR runs over **HTTPS by default**, even in development. This is critical for:
 
-To run the frontend in development mode, follow these steps:
+* **Camera Access**: Browsers **require a secure origin (HTTPS)** to access camera APIs used for QR scanning.
+* **Progressive Web App (PWA) Installation**: Required for full PWA support on most platforms.
 
-1. **Ensure Environment Setup**
+### Creating SSL Certificates with `mkcert`
 
-   * Make sure that all dependencies and environment variables are correctly configured.
+We recommend using [`mkcert`](https://github.com/FiloSottile/mkcert) to generate trusted development certificates:
+
+1. **Install mkcert**
+
+   ```bash
+   brew install mkcert           # macOS
+   sudo pacman -S mkcert         # Arch Linux
+   choco install mkcert          # Windows
+   ```
+
+2. **Create Local CA and Certs**
+
+   ```bash
+   mkcert -install
+   mkcert localhost 127.0.0.1 ::1
+   ```
+
+3. **Place the certs in your certs directory and update `.env` paths accordingly**
+
+---
+
+## Docker Setup
+
+### Running with Docker Compose
+
+After setting up your `.env` file and SSL certificates:
+
+1. **Start Services**
+
+   ```bash
+   docker compose up -d
+   ```
+
+2. **View Logs**
+
+   ```bash
+   docker compose logs -f
+   ```
+
+The `docker-compose.yml` in the root directory launches backend, frontend, and database containers.
+
+---
+
+## Backend
+
+### Running the Backend (Development)
+
+1. **Navigate to Backend Directory**
+
+   ```bash
+   cd repos/backend
+   ```
+
+2. **Run the Server**
+
+   ```bash
+   go run cmd/equipqr/main.go
+   ```
+
+   The backend is live at `https://localhost:8080` (or the configured port). Ensure the `SSL_CERT_PATH` and `SSL_KEY_PATH` are valid.
+
+### Building & Running in Production
+
+1. **Build the Binary**
+
+   ```bash
+   go build -o ./equipqr cmd/equipqr/main.go
+   ```
+
+2. **Run the Binary**
+
+   ```bash
+   ./equipqr
+   ```
+
+---
+
+## Frontend
+
+### Running the Frontend (Development)
+
+1. **Navigate to Frontend Directory**
+
+   ```bash
+   cd repos/frontend
+   ```
 
 2. **Install Dependencies**
 
-   * Navigate to the frontend project directory:
+   ```bash
+   npm install
+   ```
 
-     ```bash
-     cd repos/frontend
-     ```
-   * Install the necessary dependencies using `npm`:
+3. **Start the Dev Server**
 
-     ```bash
-     npm install
-     ```
+   ```bash
+   npm run dev
+   ```
 
-3. **Start the Development Server**
+   Visit the frontend at `https://localhost:3000` (or as specified in `.env`).
 
-   * Once the dependencies are installed, start the development server:
-
-     ```bash
-     npm run dev
-     ```
-
-   This will launch the frontend application, and you should be able to access it in your browser at the designated development URL (typically `http://localhost:3000`).
+> **Note**: Because QR scanning requires camera access, the frontend must be served over **HTTPS**, or browser permissions will fail. You **must** use a trusted SSL certificate on your system. See the SSL section above.
 
 ---
 
-### Backend
+## Progressive Web App (PWA) Support
 
-#### Running the Backend (Development)
+EquipQR is built as a **Progressive Web App**, allowing it to be installed like a native app:
 
-To run the backend in development mode, use the following steps:
+* On **mobile devices**, tap the **“Add to Home Screen”** prompt in supported browsers.
+* On **desktop browsers** (e.g., Chrome or Edge), click the **install icon** in the address bar.
 
-1. **Ensure Environment Setup**
-
-   * Navigate to the backend directory:
-
-     ```bash
-     cd repos/backend
-     ```
-   * Ensure that all necessary environment variables and dependencies are set up correctly for local development.
-
-2. **Run the Backend with `go run`**
-
-   * Start the backend in development mode using the `go run` command:
-
-     ```bash
-     go run cmd/equipqr/main.go
-     ```
-
-   By default, the backend will be accessible at `http://localhost:8080`. This can be customized if needed by adjusting the relevant environment variables or configuration files.
-
-#### Building and Starting the Backend (Production)
-
-To build and run the backend in production mode:
-
-1. **Build the Backend**
-
-   * First, build the Go binary:
-
-     ```bash
-     cd repos/backend
-     go build -o ./equipqr cmd/equipqr/main.go
-     ```
-
-2. **Run the Backend**
-
-   * After building the binary, start the backend service:
-
-     ```bash
-     ./equipqr
-     ```
-
-   The backend will be live at `http://localhost:8080` by default, unless otherwise specified in the environment setup.
-
-Ensure that your environment is properly configured with necessary configuration files and environment variables for a smooth deployment.
-Here's the updated and professional documentation with a section for Docker setup:
-
----
-
-### Docker Setup
-
-#### Running with Docker
-
-To run EquipQR using Docker, follow these steps **after completing the environment setup**:
-
-1. **Ensure Environment Setup**
-
-   * Follow the steps outlined above to configure your environment and install dependencies.
-
-2. **Run Docker Compose**
-
-   * In the root directory of the project, execute the following command to start all services in the background:
-
-     ```bash
-     docker compose up -d
-     ```
-
-3. **View Docker Logs**
-
-   * To view logs from the Docker containers, run:
-
-     ```bash
-     docker compose logs -f
-     ```
-
-   The `docker-compose.yml` file in the project root directory defines the necessary configuration for running the application in containers.
+This allows full-screen offline-friendly access, QR scanning, and native-like performance on all platforms.
