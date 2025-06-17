@@ -1,8 +1,6 @@
 package repositories
 
 import (
-	"errors"
-
 	"github.com/EquipQR/equipqr/backend/internal/database"
 	"github.com/EquipQR/equipqr/backend/internal/database/models"
 )
@@ -10,10 +8,14 @@ import (
 func GetEquipmentByID(id string) (*models.Equipment, error) {
 	var eq models.Equipment
 
-	result := database.DB.First(&eq, "id = ?", id)
-	if errors.Is(result.Error, database.DB.Error) || result.Error != nil {
+	result := database.DB.Preload("Business").First(&eq, "id = ?", id)
+	if result.Error != nil {
 		return nil, result.Error
 	}
 
 	return &eq, nil
+}
+
+func CreateEquipment(equipment *models.Equipment) error {
+	return database.DB.Create(equipment).Error
 }

@@ -14,3 +14,7 @@ func GetUserByID(id string) (*models.User, error) {
 
 	return &user, nil
 }
+
+func CreateUser(user *models.User) error {
+	return database.DB.Create(user).Error
+}
