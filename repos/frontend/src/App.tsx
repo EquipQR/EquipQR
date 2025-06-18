@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { QRScanner } from './components/QRScanner';
 import { EquipmentDisplay } from './components/EquipmentDisplay';
 import { Equipment } from './types/equipment';
@@ -10,27 +10,27 @@ function App() {
   const [equipment, setEquipment] = useState<Equipment | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>('');
-const handleScan = async (scannedId: string) => {
-  setLoading(true);
-  setError('');
+  const handleScan = async (scannedId: string) => {
+    setLoading(true);
+    setError('');
 
-  try {
-    const equipmentData = await fetchEquipment(scannedId);
-    setEquipment(equipmentData);
-    setIsScanning(false);
-  } catch (err) {
-    if (err instanceof TypeError && err.message.includes('Failed to fetch')) {
-      setError('Network error or CORS issue. Check the server and CORS configuration.');
-    } else if (err instanceof Error) {
-      setError(err.message);
-    } else {
-      setError('Unexpected error occurred while fetching equipment data.');
+    try {
+      const equipmentData = await fetchEquipment(scannedId);
+      setEquipment(equipmentData);
+      setIsScanning(false);
+    } catch (err) {
+      if (err instanceof TypeError && err.message.includes('Failed to fetch')) {
+        setError('Network error or CORS issue. Check the server and CORS configuration.');
+      } else if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError('Unexpected error occurred while fetching equipment data.');
+      }
+      setEquipment(null);
+    } finally {
+      setLoading(false);
     }
-    setEquipment(null);
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
 
   const startNewScan = () => {
@@ -74,18 +74,17 @@ const handleScan = async (scannedId: string) => {
                 <h2 className="text-lg font-semibold text-gray-900">QR Code Scanner</h2>
                 <button
                   onClick={toggleScanning}
-                  className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                    isScanning
+                  className={`px-4 py-2 rounded-lg font-medium transition-all ${isScanning
                       ? 'bg-red-100 text-red-700 hover:bg-red-200'
                       : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
-                  }`}
+                    }`}
                 >
                   {isScanning ? 'Stop Scanning' : 'Start Scanning'}
                 </button>
               </div>
-              
+
               <QRScanner onScan={handleScan} isScanning={isScanning} />
-              
+
               {loading && (
                 <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                   <div className="flex items-center space-x-3">

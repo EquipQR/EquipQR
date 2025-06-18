@@ -4,6 +4,7 @@ import { Flashlight, FlashlightOff, Info, Loader2 } from 'lucide-react';
 
 interface QRScannerProps {
   onScan: (result: string) => void;
+  isScanning: boolean;
   loading?: boolean;
   error?: string;
 }
@@ -12,7 +13,7 @@ export const QRScanner: React.FC<QRScannerProps> = ({ onScan, loading, error }) 
   const videoRef = useRef<HTMLVideoElement>(null);
   const qrScannerRef = useRef<QrScanner | null>(null);
   const torchTrackRef = useRef<MediaStreamTrack | null>(null);
-  const [hasCamera, setHasCamera] = useState(true);
+  const [_, setHasCamera] = useState(true);
   const [cameraError, setCameraError] = useState<string>('');
   const [torchSupported, setTorchSupported] = useState(false);
   const [torchEnabled, setTorchEnabled] = useState(false);
@@ -44,9 +45,9 @@ export const QRScanner: React.FC<QRScannerProps> = ({ onScan, loading, error }) 
             videoRef.current?.play().catch(console.error);
           };
         }
-
         const qrScanner = new QrScanner(
           videoRef.current!,
+          // @ts-expect-error
           (result) => onScan(result.data),
           {
             highlightScanRegion: true,
@@ -71,7 +72,8 @@ export const QRScanner: React.FC<QRScannerProps> = ({ onScan, loading, error }) 
     return () => {
       qrScannerRef.current?.destroy();
       torchTrackRef.current?.stop();
-      videoRef.current?.srcObject?.getTracks().forEach((t) => t.stop());
+      const stream = videoRef.current?.srcObject as MediaStream | null;
+      stream?.getTracks().forEach((t) => t.stop());
     };
   }, [onScan]);
 
@@ -83,8 +85,8 @@ export const QRScanner: React.FC<QRScannerProps> = ({ onScan, loading, error }) 
 
     try {
       const enableTorch = !torchEnabled;
-      await torchTrackRef.current.applyConstraints({
-        advanced: [{ torch: enableTorch }]
+      await torchTrackRef.current?.applyConstraints({
+        advanced: [{ torch: enableTorch } as any]
       });
       setTorchEnabled(enableTorch);
       setTorchError(null);
@@ -92,6 +94,7 @@ export const QRScanner: React.FC<QRScannerProps> = ({ onScan, loading, error }) 
       console.error(err);
       setTorchError('Failed to toggle torch.');
     }
+
   };
 
   return (
@@ -115,11 +118,10 @@ export const QRScanner: React.FC<QRScannerProps> = ({ onScan, loading, error }) 
           {torchSupported && (
             <button
               onClick={toggleTorch}
-              className={`p-3 rounded-full backdrop-blur-sm transition-all ${
-                torchEnabled
+              className={`p-3 rounded-full backdrop-blur-sm transition-all ${torchEnabled
                   ? 'bg-yellow-500/80 text-white'
                   : 'bg-black/60 text-white hover:bg-black/80'
-              }`}
+                }`}
             >
               {torchEnabled ? (
                 <Flashlight className="w-6 h-6" />
