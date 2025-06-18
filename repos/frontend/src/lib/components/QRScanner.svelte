@@ -16,8 +16,7 @@
   let torchSupported = false;
   let torchEnabled = false;
   let torchError: string | null = null;
-
-  import { scannedEquipmentId } from "$lib/stores/equipmentContext";
+  let cameraReady: boolean = false;
 
   const setupScanner = async () => {
     try {
@@ -38,7 +37,10 @@
 
       if (videoRef) {
         videoRef.srcObject = stream;
-        videoRef.onloadedmetadata = () => videoRef?.play().catch(console.error);
+        videoRef.onloadedmetadata = () => {
+          videoRef?.play().catch(console.error);
+          cameraReady = true;
+        };
       }
 
       qrScanner = new QrScanner(
@@ -113,6 +115,17 @@
       playsinline
     ></video>
 
+    {#if !cameraReady}
+      <div
+        class="absolute inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-30"
+      >
+        <div class="bg-white rounded-2xl p-8 text-center max-w-sm mx-4">
+          <Loader2 class="w-12 h-12 text-black animate-spin mx-auto mb-4" />
+          <p class="text-gray-600">Preparing scanner...</p>
+        </div>
+      </div>
+    {/if}
+
     <div
       class="absolute top-0 left-0 right-0 p-6 z-10 flex items-center justify-between"
     >
@@ -148,9 +161,6 @@
         <div
           class="bg-black/60 backdrop-blur-sm rounded-2xl px-6 py-4 inline-block"
         >
-          <h2 class="text-white text-xl font-semibold mb-2">
-            Scan Equipment QR Code
-          </h2>
           <p class="text-white/80 text-sm">
             Position the QR code within the frame to scan equipment information
           </p>

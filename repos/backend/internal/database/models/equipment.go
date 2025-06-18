@@ -7,14 +7,13 @@ import (
 )
 
 type Equipment struct {
-	ID         string         `gorm:"primaryKey;type:varchar(64);not null"`
-	BusinessID string         `gorm:"type:uuid;not null;index"`
-	Status     string         `gorm:"type:text;not null;check:status IN ('in service','not in service')"`
-	Type       string         `gorm:"type:text;not null"`
-	Location   string         `gorm:"type:text"`
-	MoreFields datatypes.JSON `gorm:"type:jsonb"`
-
-	Business Business `gorm:"foreignKey:BusinessID;constraint:OnDelete:CASCADE"`
+	ID         string         `gorm:"primaryKey;type:varchar(64);not null" json:"id"`
+	BusinessID string         `gorm:"type:uuid;not null;index" json:"businessId"`
+	Status     string         `gorm:"type:text;not null;check:status IN ('in service','not in service')" json:"status"`
+	Type       string         `gorm:"type:text;not null" json:"type"`
+	Location   string         `gorm:"type:text" json:"location"`
+	MoreFields datatypes.JSON `gorm:"type:jsonb" json:"moreFields"`
+	Business   Business       `gorm:"foreignKey:BusinessID;constraint:OnDelete:CASCADE" json:"business"`
 }
 
 func (equipment *Equipment) BeforeCreate(tx *gorm.DB) error {
