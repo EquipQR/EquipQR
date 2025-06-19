@@ -22,6 +22,7 @@
     AccordionItem,
     AccordionTrigger,
   } from "$lib/components/ui/accordion";
+  import { goto } from "$app/navigation";
 
   let equipmentId: string | null = null;
   let equipment: Equipment | null = null;
@@ -51,7 +52,7 @@
 
   function handleReportClick(): void {
     if (data.equipmentId) {
-      window.location.href = `/issue?scanned=${encodeURIComponent(data.equipmentId)}`;
+      goto(`/issue?scanned=${encodeURIComponent(data.equipmentId)}`);
     }
   }
 </script>

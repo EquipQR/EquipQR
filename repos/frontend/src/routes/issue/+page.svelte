@@ -13,6 +13,7 @@
   import { Skeleton } from "$lib/components/ui/skeleton";
   import { Separator } from "$lib/components/ui/separator";
   import type { Issue } from "$lib/types/issue";
+  import { goto } from "$app/navigation";
 
   export let data: {
     equipmentId: string | null;
@@ -72,7 +73,7 @@
         size="icon"
         class="bg-black/60 text-white hover:bg-black/80"
         onclick={() =>
-          (window.location.href = `/equipment?scanned=${data.equipmentId}`)}
+          (goto(`/equipment?scanned=${data.equipmentId}`))}
       >
         <ArrowLeft class="w-5 h-5" />
       </Button>
