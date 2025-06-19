@@ -8,18 +8,18 @@ import (
 )
 
 type Issue struct {
-	ID          string `gorm:"primaryKey;type:varchar(64);not null"`
-	Title       string `gorm:"type:varchar(128);not null"`
-	EquipmentID string `gorm:"not null;index"`
-	Description string `gorm:"type:text;not null"`
-	Progress    string `gorm:"type:text;not null"`
-	AssigneeID  string `gorm:"not null;index"`
+	ID          string `gorm:"primaryKey;type:varchar(64);not null" json:"id"`
+	Title       string `gorm:"type:varchar(128);not null" json:"title"`
+	EquipmentID string `gorm:"not null;index" json:"equipment_id"`
+	Description string `gorm:"type:text;not null" json:"description"`
+	Progress    string `gorm:"type:text;not null" json:"progress"`
+	AssigneeID  string `gorm:"not null;index" json:"assignee_id"`
 
-	DateSubmitted time.Time  `gorm:"not null"`
-	DateCompleted *time.Time `gorm:"default:null"`
+	DateSubmitted time.Time  `gorm:"not null" json:"date_submitted"`
+	DateCompleted *time.Time `gorm:"default:null" json:"date_completed,omitempty"`
 
-	Equipment Equipment `gorm:"foreignKey:EquipmentID;constraint:OnDelete:CASCADE"`
-	Assignee  User      `gorm:"foreignKey:AssigneeID;constraint:OnDelete:RESTRICT"`
+	Equipment Equipment `gorm:"foreignKey:EquipmentID;constraint:OnDelete:CASCADE" json:"equipment"`
+	Assignee  User      `gorm:"foreignKey:AssigneeID;constraint:OnDelete:RESTRICT" json:"assignee"`
 }
 
 func (issue *Issue) BeforeCreate(tx *gorm.DB) error {

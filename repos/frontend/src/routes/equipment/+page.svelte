@@ -1,10 +1,11 @@
 <script lang="ts">
   import { onMount, tick } from "svelte";
   import { ArrowLeft, FileText, PlusCircle } from "lucide-svelte";
-  import { getEquipmentById } from "$lib/api/equipment";
+  import { getEquipmentById, getEquipmentIssuesById } from "$lib/api/equipment";
   import { formatKey } from "$lib/utils";
   import type { Equipment } from "$lib/types/equipment";
-  import { mockIssues } from "$lib/mockData"
+  import type { Issue } from "$lib/types/issue";
+  import { mockIssues } from "$lib/mockData";
 
   import {
     Card,
@@ -29,14 +30,14 @@
   let imageLoaded = false;
   let imageRef: HTMLImageElement | null = null;
 
+  let issues: Issue[] = [];
 
+  export let data: { equipmentId: string | null };
   onMount(async () => {
-    const urlParams = new URLSearchParams(window.location.search);
-    equipmentId = urlParams.get("scanned") ?? null;
-
-    if (equipmentId) {
+    if (data.equipmentId) {
       try {
-        equipment = await getEquipmentById(equipmentId);
+        equipment = await getEquipmentById(data.equipmentId);
+        issues = (await getEquipmentIssuesById(data.equipmentId)) ?? [];
         error = null;
       } catch (e) {
         error = "Failed to load equipment.";
@@ -50,7 +51,9 @@
   });
 
   function handleReportClick(): void {
-    alert("Open report issue modal or navigate.");
+    if (data.equipmentId) {
+      window.location.href = `/issue?scanned=${encodeURIComponent(data.equipmentId)}`;
+    }
   }
 </script>
 
@@ -142,15 +145,15 @@
               Report Issue
             </Button>
           </div>
-          {#if mockIssues.length}
+          {#if issues.length}
             <Separator />
             <div class="space-y-2">
               <h2 class="text-lg font-semibold">Issue History</h2>
               <Accordion type="single" class="w-full">
-                {#each mockIssues as issue}
+                {#each issues as issue}
                   <AccordionItem value={issue.id}>
                     <AccordionTrigger>
-                      {new Date(issue.created_at).toLocaleDateString()} – {issue.status}
+                      {new Date(issue.date_submitted).toLocaleDateString()} – {issue.progress}
                     </AccordionTrigger>
                     <AccordionContent>
                       <p class="text-sm text-muted-foreground">

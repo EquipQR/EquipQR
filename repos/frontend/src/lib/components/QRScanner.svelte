@@ -26,9 +26,15 @@
         throw new Error("No video input devices found.");
 
       const selectedDevice = videoDevices[videoDevices.length - 1];
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { deviceId: { exact: selectedDevice.deviceId } },
-      });
+      let stream: MediaStream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: { deviceId: selectedDevice.deviceId },
+        });
+      } catch {
+        // fallback: try any camera if exact match fails
+        stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      }
 
       const track = stream.getVideoTracks()[0];
       const capabilities = track.getCapabilities?.() ?? {};
