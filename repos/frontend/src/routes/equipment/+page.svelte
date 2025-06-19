@@ -87,7 +87,7 @@
         variant="ghost"
         size="icon"
         class="bg-black/60 text-white hover:bg-black/80 transition transform active:scale-90"
-        onclick={() => (window.location.href = "/")}
+        onclick={() => (goto("/"))}
       >
         <ArrowLeft class="w-5 h-5" />
       </Button>
