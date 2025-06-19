@@ -3,7 +3,9 @@ package utils
 import (
 	"crypto/rand"
 	"encoding/base64"
+	"errors"
 	"fmt"
+	"strings"
 
 	"golang.org/x/crypto/argon2"
 )
@@ -36,38 +38,32 @@ func GeneratePasswordHash(password string, cfg Argon2Config) (string, error) {
 	return encoded, nil
 }
 
-func ComparePasswordHash(encodedHash, password string, cfg Argon2Config) bool {
-	parts := split(encodedHash, "$")
+func ComparePasswordHash(encodedHash string, password string, cfg Argon2Config) (bool, error) {
+	parts := strings.Split(encodedHash, "$")
 	if len(parts) != 2 {
-		return false
+		return false, errors.New("invalid hash format")
 	}
 
-	salt, err1 := base64.RawStdEncoding.DecodeString(parts[0])
-	_, err2 := base64.RawStdEncoding.DecodeString(parts[1])
-	if err1 != nil || err2 != nil {
-		return false
+	salt, err := base64.RawStdEncoding.DecodeString(parts[0])
+	if err != nil {
+		return false, errors.New("invalid base64 salt")
+	}
+
+	expectedHash, err := base64.RawStdEncoding.DecodeString(parts[1])
+	if err != nil {
+		return false, errors.New("invalid base64 hash")
 	}
 
 	newHash := argon2.IDKey([]byte(password), salt, cfg.Time, cfg.Memory, cfg.Threads, cfg.KeyLen)
-	return base64.RawStdEncoding.EncodeToString(newHash) == parts[1]
-}
+	if len(newHash) != len(expectedHash) {
+		return false, errors.New("hash length mismatch")
+	}
 
-func split(input, sep string) []string {
-	var parts []string
-	i := 0
-	for {
-		j := i + len(sep)
-		if j > len(input) {
-			break
+	for i := range newHash {
+		if newHash[i] != expectedHash[i] {
+			return false, nil
 		}
-		if input[i:j] == sep {
-			parts = append(parts, input[:i], input[j:])
-			break
-		}
-		i++
 	}
-	if len(parts) == 0 {
-		return []string{input}
-	}
-	return parts
+
+	return true, nil
 }

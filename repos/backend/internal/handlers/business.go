@@ -9,7 +9,7 @@ import (
 )
 
 type CreateBusinessRequest struct {
-	BusinessName string `json:"business_name" validate:"required,min=2,max=64"`
+	BusinessName string `json:"businessName" validate:"required,min=2,max=64"`
 }
 
 func RegisterBusinessRoutes(app *fiber.App) {

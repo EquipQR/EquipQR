@@ -15,6 +15,16 @@ func GetUserByID(id string) (*models.User, error) {
 	return &user, nil
 }
 
+func GetUserByEmail(email string) (*models.User, error) {
+	var user models.User
+
+	if err := database.DB.First(&user, "email = ?", email).Error; err != nil {
+		return nil, err
+	}
+
+	return &user, nil
+}
+
 func CreateUser(user *models.User) error {
 	return database.DB.Create(user).Error
 }

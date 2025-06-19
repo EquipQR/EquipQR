@@ -7,7 +7,7 @@ import (
 
 type Business struct {
 	ID           string `gorm:"primaryKey;type:varchar(64);not null"`
-	BusinessName string `gorm:"size:64;not null"`
+	BusinessName string `json:"businessName" validate:"required,min=2,max=64"`
 }
 
 func (business *Business) BeforeCreate(tx *gorm.DB) error {
