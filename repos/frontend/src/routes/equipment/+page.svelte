@@ -5,7 +5,6 @@
   import { formatKey } from "$lib/utils";
   import type { Equipment } from "$lib/types/equipment";
   import type { Issue } from "$lib/types/issue";
-  import { mockIssues } from "$lib/mockData";
 
   import {
     Card,
