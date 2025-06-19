@@ -154,6 +154,7 @@
           {/if}
         </button>
       {/if}
+
     </div>
 
     <div class="absolute bottom-0 left-0 right-0 p-6 z-10">

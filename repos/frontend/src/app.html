@@ -6,6 +6,12 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		%sveltekit.head%
 	</head>
+	<script>
+  // Avoid FOUC (Flash Of Unstyled Content)
+  if (!document.documentElement.classList.contains('dark')) {
+    document.documentElement.classList.add('dark');
+  }
+</script>
 	<body data-sveltekit-preload-data="hover">
 		<div style="display: contents">%sveltekit.body%</div>
 	</body>
