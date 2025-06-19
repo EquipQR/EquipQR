@@ -4,6 +4,7 @@
   import { getEquipmentById } from "$lib/api/equipment";
   import { formatKey } from "$lib/utils";
   import type { Equipment } from "$lib/types/equipment";
+  import { mockIssues } from "$lib/mockData"
 
   import {
     Card,
@@ -28,27 +29,6 @@
   let imageLoaded = false;
   let imageRef: HTMLImageElement | null = null;
 
-  type Issue = {
-    id: string;
-    created_at: string;
-    status: string;
-    description: string;
-  };
-
-  let issues: Issue[] = [
-    {
-      id: "1",
-      created_at: "2024-12-01T14:33:00Z",
-      status: "resolved",
-      description: "Fuel line replaced due to corrosion.",
-    },
-    {
-      id: "2",
-      created_at: "2025-01-15T09:20:00Z",
-      status: "open",
-      description: "Unusual vibration detected during operation.",
-    },
-  ];
 
   onMount(async () => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -70,7 +50,6 @@
   });
 
   function handleReportClick(): void {
-    // Replace with modal open or navigation
     alert("Open report issue modal or navigate.");
   }
 </script>
@@ -163,12 +142,12 @@
               Report Issue
             </Button>
           </div>
-          {#if issues.length}
+          {#if mockIssues.length}
             <Separator />
             <div class="space-y-2">
               <h2 class="text-lg font-semibold">Issue History</h2>
               <Accordion type="single" class="w-full">
-                {#each issues as issue}
+                {#each mockIssues as issue}
                   <AccordionItem value={issue.id}>
                     <AccordionTrigger>
                       {new Date(issue.created_at).toLocaleDateString()} – {issue.status}
