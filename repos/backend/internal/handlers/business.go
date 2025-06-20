@@ -8,10 +8,6 @@ import (
 	"github.com/google/uuid"
 )
 
-type CreateBusinessRequest struct {
-	BusinessName string `json:"businessName" validate:"required,min=2,max=64"`
-}
-
 func RegisterBusinessRoutes(app *fiber.App) {
 	app.Get("/business/:id", func(c *fiber.Ctx) error {
 		id := c.Params("id")
@@ -22,8 +18,8 @@ func RegisterBusinessRoutes(app *fiber.App) {
 		return c.JSON(business)
 	})
 
-	app.Post("/business", utils.ValidateBody[CreateBusinessRequest](), func(c *fiber.Ctx) error {
-		req := c.Locals("body").(CreateBusinessRequest)
+	app.Post("/business", utils.ValidateBody[utils.CreateBusinessRequest](), func(c *fiber.Ctx) error {
+		req := c.Locals("body").(utils.CreateBusinessRequest)
 
 		business := models.Business{
 			ID:           uuid.NewString(),

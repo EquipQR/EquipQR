@@ -10,14 +10,6 @@ import (
 	"gorm.io/datatypes"
 )
 
-type CreateEquipmentRequest struct {
-	BusinessID string `json:"business_id" validate:"required"`
-	Status     string `json:"status" validate:"required,oneof='in service' 'not in service'"`
-	Type       string `json:"type" validate:"required"`
-	Location   string `json:"location"`
-	MoreFields any    `json:"more_fields"`
-}
-
 func RegisterEquipmentRoutes(app *fiber.App) {
 	app.Get("/equipment/:id/issues", func(c *fiber.Ctx) error {
 		equipmentID := c.Params("id")
@@ -41,8 +33,8 @@ func RegisterEquipmentRoutes(app *fiber.App) {
 		return c.JSON(eq)
 	})
 
-	app.Post("/equipment", utils.ValidateBody[CreateEquipmentRequest](), func(c *fiber.Ctx) error {
-		req := c.Locals("body").(CreateEquipmentRequest)
+	app.Post("/equipment", utils.ValidateBody[utils.CreateEquipmentRequest](), func(c *fiber.Ctx) error {
+		req := c.Locals("body").(utils.CreateEquipmentRequest)
 
 		_, err := repositories.GetBusinessByID(req.BusinessID)
 		if err != nil {

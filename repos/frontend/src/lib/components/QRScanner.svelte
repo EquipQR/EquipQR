@@ -1,8 +1,9 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { Flashlight, FlashlightOff, Info, Loader2 } from "lucide-svelte";
+  import { Flashlight, FlashlightOff, Info, Loader2, LogOut } from "lucide-svelte";
   import QrScanner from "qr-scanner";
   import { goto } from "$app/navigation";
+  import { logout } from "$lib/api/auth";
 
   export let loading: boolean = false;
   export let error: string | undefined;
@@ -146,7 +147,7 @@
 
       {#if torchSupported}
         <button
-          on:click={toggleTorch}
+          onclick={toggleTorch}
           class={`p-3 rounded-full backdrop-blur-sm transition-all ${
             torchEnabled
               ? "bg-yellow-500/80 text-white"
@@ -159,8 +160,13 @@
             <FlashlightOff class="w-6 h-6" />
           {/if}
         </button>
+        <button
+          onclick={logout}
+          class="p-3 rounded-full bg-black/60 text-white hover:bg-red-700 transition-all ml-2 backdrop-blur-sm"
+        >
+          <LogOut class="w-6 h-6" />
+        </button>
       {/if}
-
     </div>
 
     <div class="absolute bottom-0 left-0 right-0 p-6 z-10">
@@ -204,7 +210,7 @@
           </h3>
           <p class="text-gray-600 mb-6">{cameraError || error}</p>
           <button
-            on:click={() => window.location.reload()}
+            onclick={() => window.location.reload()}
             class="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors font-medium"
           >
             Try Again

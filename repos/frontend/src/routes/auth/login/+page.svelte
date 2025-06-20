@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { onMount } from "svelte";
   import {
     Tabs,
     TabsList,
@@ -11,7 +12,6 @@
   import { Label } from "$lib/components/ui/label";
   import { Separator } from "$lib/components/ui/separator";
   import { loginUser, registerUser } from "$lib/api/auth";
-  import { Loader2 } from "lucide-svelte";
 
   let tab: "login" | "register" = "login";
 
@@ -174,7 +174,19 @@
           </Button>
         {:else if loginStep === "loading"}
           <div class="flex justify-center items-center h-20">
-            <Loader2 class="h-6 w-6 animate-spin text-neutral-600" />
+            <svg
+              class="h-6 w-6 animate-spin text-neutral-600"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M12 4v4m0 8v4m4-4h4m-16 0H4m1.64-5.64l2.83 2.83m8.48 0l2.83-2.83M6.34 6.34l2.83 2.83m8.48 0l2.83-2.83"
+              />
+            </svg>
           </div>
         {:else if loginStep === "password"}
           <div class="space-y-2">

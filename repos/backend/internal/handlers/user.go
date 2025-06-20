@@ -1,28 +1,15 @@
 package handlers
 
 import (
-	"time"
-
 	"github.com/EquipQR/equipqr/backend/internal/database/models"
 	"github.com/EquipQR/equipqr/backend/internal/repositories"
 	"github.com/EquipQR/equipqr/backend/internal/utils"
 	"github.com/gofiber/fiber/v2"
 )
 
-type LoginRequest struct {
-	Email    string `json:"email" validate:"required,email"`
-	Password string `json:"password" validate:"required"`
-}
-
-type CreateUserRequest struct {
-	Username string `json:"username" validate:"required,min=3,max=64"`
-	Email    string `json:"email" validate:"required,email"`
-	Password string `json:"password" validate:"required,min=8,max=256"`
-}
-
 func RegisterUserRoutes(app *fiber.App) {
-	app.Post("/auth/login", utils.ValidateBody[LoginRequest](), func(c *fiber.Ctx) error {
-		req := c.Locals("body").(LoginRequest)
+	app.Post("/auth/login", utils.ValidateBody[utils.LoginRequest](), func(c *fiber.Ctx) error {
+		req := c.Locals("body").(utils.LoginRequest)
 
 		user, err := repositories.GetUserByEmail(req.Email)
 		if err != nil || user == nil {
@@ -45,15 +32,7 @@ func RegisterUserRoutes(app *fiber.App) {
 			})
 		}
 
-		c.Cookie(&fiber.Cookie{
-			Name:     "session",
-			Value:    signedToken,
-			Path:     "/",
-			HTTPOnly: true,
-			Secure:   true,
-			SameSite: "Lax",
-			Expires:  time.Now().Add(7 * 24 * time.Hour),
-		})
+		utils.SetOrRemoveSessionCookie(c, signedToken)
 
 		return c.JSON(fiber.Map{
 			"message": "login successful",
@@ -62,22 +41,14 @@ func RegisterUserRoutes(app *fiber.App) {
 	})
 
 	app.Post("/auth/logout", func(c *fiber.Ctx) error {
-		c.Cookie(&fiber.Cookie{
-			Name:     "session",
-			Value:    "",
-			Path:     "/",
-			HTTPOnly: true,
-			Secure:   true,
-			SameSite: "Lax",
-			Expires:  time.Now().Add(-1 * time.Hour),
-		})
+		utils.SetOrRemoveSessionCookie(c, "")
 		return c.JSON(fiber.Map{
 			"message": "logout successful",
 		})
 	})
 
-	app.Post("/user", utils.ValidateBody[CreateUserRequest](), func(c *fiber.Ctx) error {
-		req := c.Locals("body").(CreateUserRequest)
+	app.Post("/user", utils.ValidateBody[utils.CreateUserRequest](), func(c *fiber.Ctx) error {
+		req := c.Locals("body").(utils.CreateUserRequest)
 
 		hashedPassword, err := utils.GeneratePasswordHash(req.Password, utils.DefaultArgon2Config)
 		if err != nil {
@@ -105,8 +76,8 @@ func RegisterUserRoutes(app *fiber.App) {
 		})
 	})
 
-	app.Post("/auth/register", utils.ValidateBody[CreateUserRequest](), func(c *fiber.Ctx) error {
-		req := c.Locals("body").(CreateUserRequest)
+	app.Post("/auth/register", utils.ValidateBody[utils.CreateUserRequest](), func(c *fiber.Ctx) error {
+		req := c.Locals("body").(utils.CreateUserRequest)
 
 		hashedPassword, err := utils.GeneratePasswordHash(req.Password, utils.DefaultArgon2Config)
 		if err != nil {
@@ -135,19 +106,31 @@ func RegisterUserRoutes(app *fiber.App) {
 			})
 		}
 
-		c.Cookie(&fiber.Cookie{
-			Name:     "session",
-			Value:    signedToken,
-			Path:     "/",
-			HTTPOnly: true,
-			Secure:   true,
-			SameSite: "Lax",
-			Expires:  time.Now().Add(7 * 24 * time.Hour),
-		})
+		utils.SetOrRemoveSessionCookie(c, signedToken)
 
 		return c.Status(fiber.StatusCreated).JSON(fiber.Map{
 			"message": "user registered and logged in",
 			"user":    user,
+		})
+	})
+
+	app.Get("/user", func(c *fiber.Ctx) error {
+		userID, err := utils.ValidateJWTFromCookie(c)
+		if err != nil || userID == "" {
+			return c.Status(fiber.StatusForbidden).JSON(fiber.Map{
+				"error": "unauthorized",
+			})
+		}
+
+		user, err := repositories.GetUserByID(userID)
+		if err != nil || user == nil {
+			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+				"error": "user not found",
+			})
+		}
+
+		return c.JSON(fiber.Map{
+			"user": user,
 		})
 	})
 }

@@ -7,13 +7,6 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-type CreateIssueRequest struct {
-	Title       string `json:"title" validate:"required,min=3,max=128"`
-	Description string `json:"description" validate:"required"`
-	EquipmentID string `json:"equipment_id" validate:"required"`
-	AssigneeID  string `json:"assignee_id" validate:"required"`
-}
-
 func RegisterIssueRoutes(app *fiber.App) {
 	app.Get("/issue/:id", func(c *fiber.Ctx) error {
 		id := c.Params("id")
@@ -24,8 +17,8 @@ func RegisterIssueRoutes(app *fiber.App) {
 		return c.JSON(issue)
 	})
 
-	app.Post("/issue", utils.ValidateBody[CreateIssueRequest](), func(c *fiber.Ctx) error {
-		req := c.Locals("body").(CreateIssueRequest)
+	app.Post("/issue", utils.ValidateBody[utils.CreateIssueRequest](), func(c *fiber.Ctx) error {
+		req := c.Locals("body").(utils.CreateIssueRequest)
 
 		// Check that Equipment and Assignee exists
 		_, err := repositories.GetEquipmentByID(req.EquipmentID)
