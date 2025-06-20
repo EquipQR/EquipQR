@@ -72,8 +72,9 @@
         variant="ghost"
         size="icon"
         class="bg-black/60 text-white hover:bg-black/80"
-        onclick={() =>
-          (goto(`/equipment?scanned=${data.equipmentId}`))}
+        onclick={async () => {
+          goto(`/equipment?scanned=${data.equipmentId}`);
+        }}
       >
         <ArrowLeft class="w-5 h-5" />
       </Button>

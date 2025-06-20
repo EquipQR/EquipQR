@@ -50,9 +50,9 @@
     }
   });
 
-  function handleReportClick(): void {
+  async function handleReportClick(): Promise<void> {
     if (data.equipmentId) {
-      goto(`/issue?scanned=${encodeURIComponent(data.equipmentId)}`);
+      await goto(`/issue?scanned=${encodeURIComponent(data.equipmentId)}`);
     }
   }
 </script>
@@ -87,7 +87,9 @@
         variant="ghost"
         size="icon"
         class="bg-black/60 text-white hover:bg-black/80 transition transform active:scale-90"
-        onclick={() => (goto("/"))}
+        onclick={async () => {
+          await goto("/")
+        }}
       >
         <ArrowLeft class="w-5 h-5" />
       </Button>

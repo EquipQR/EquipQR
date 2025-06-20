@@ -1,6 +1,12 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { Flashlight, FlashlightOff, Info, Loader2, LogOut } from "lucide-svelte";
+  import {
+    Flashlight,
+    FlashlightOff,
+    Info,
+    Loader2,
+    LogOut,
+  } from "lucide-svelte";
   import QrScanner from "qr-scanner";
   import { goto } from "$app/navigation";
   import { logout } from "$lib/api/auth";
@@ -53,10 +59,10 @@
       qrScanner = new QrScanner(
         videoRef!,
         // @ts-expect-error: result.data is valid
-        (result) => {
+        async (result) => {
           const id = result.data;
           if (id) {
-            goto("/equipment?scanned=" + id);
+            await goto("/equipment?scanned=" + id);
           }
         },
         {

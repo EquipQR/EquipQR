@@ -15,7 +15,7 @@ export async function loginUser(
     throw new Error(data.message || "Login failed");
   }
 
-  goto("/");
+  await goto("/");
 }
 
 export async function registerUser(
@@ -38,7 +38,7 @@ export async function registerUser(
     throw new Error(data.message || "Registration failed");
   }
 
-  goto("/");
+  await goto("/");
 }
 
 export async function getUserCurrent(fetchFn: typeof fetch): Promise<{
@@ -74,8 +74,8 @@ export async function logout(): Promise<void> {
       credentials: "include",
     });
   } catch (err) {
-    console.error("Logout failed:", err)
+    console.error("Logout failed:", err);
   } finally {
-    goto("/auth/login")
+    await goto("/auth/login");
   }
 }
