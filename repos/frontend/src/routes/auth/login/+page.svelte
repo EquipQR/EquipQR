@@ -72,7 +72,12 @@
         "Password must be at least 8 characters and include a special character.";
       return;
     }
-    await loginUser(loginEmail, loginPassword);
+
+    try {
+      await loginUser(loginEmail, loginPassword);
+    } catch (err) {
+      loginError = (err as Error).message;
+    }
   }
 
   async function attemptRegister(): Promise<void> {
@@ -94,7 +99,12 @@
       registerError = "You must agree to the Terms of Service.";
       return;
     }
-    await registerUser(registerUsername, registerEmail, registerPassword);
+
+    try {
+      await registerUser(registerUsername, registerEmail, registerPassword);
+    } catch (err) {
+      registerError = (err as Error).message;
+    }
   }
 
   async function handleLoginKeydown(event: KeyboardEvent): Promise<void> {
@@ -114,14 +124,20 @@
   }
 </script>
 
-<div class="dark min-h-screen flex items-center justify-center bg-black px-4 py-12 text-white">
-  <div class="w-full max-w-md bg-black rounded-xl shadow-2xl p-8 space-y-6 border border-neutral-800">
+<div
+  class="dark min-h-screen flex items-center justify-center bg-black px-4 py-12 text-white"
+>
+  <div
+    class="w-full max-w-md bg-black rounded-xl shadow-2xl p-8 space-y-6 border border-neutral-800"
+  >
     <div class="text-center space-y-1">
       <h3 class="text-3xl font-bold">EquipQR</h3>
     </div>
 
     <Tabs bind:value={tab}>
-      <TabsList class="w-full grid grid-cols-2 gap-2 bg-neutral-900 rounded-md p-1">
+      <TabsList
+        class="w-full grid grid-cols-2 gap-2 bg-neutral-900 rounded-md p-1"
+      >
         <TabsTrigger
           value="login"
           class="data-[state=active]:bg-black data-[state=active]:text-white rounded-md py-1"
@@ -150,7 +166,10 @@
             />
             {#if loginError}<p class="text-sm error-text">{loginError}</p>{/if}
           </div>
-          <Button class="w-full mt-2 transition duration-150 active:scale-95" onclick={continueToPassword}>
+          <Button
+            class="w-full mt-2 transition duration-150 active:scale-95"
+            onclick={continueToPassword}
+          >
             Continue
           </Button>
         {:else if loginStep === "loading"}
@@ -170,7 +189,10 @@
             />
             {#if loginError}<p class="text-sm error-text">{loginError}</p>{/if}
           </div>
-          <Button class="w-full mt-2 transition duration-150 active:scale-95" onclick={attemptLogin}>
+          <Button
+            class="w-full mt-2 transition duration-150 active:scale-95"
+            onclick={attemptLogin}
+          >
             Sign In
           </Button>
         {/if}
@@ -228,7 +250,11 @@
         <div class="flex items-center space-x-2 pt-2">
           <Checkbox id="tos" bind:checked={agreedToTOS} />
           <label for="tos" class="text-sm text-neutral-400">
-            I agree to the <a href="https://legal.equipqr.io/tos" target="_blank" class="underline hover:text-white">Terms of Service</a>
+            I agree to the <a
+              href="https://legal.equipqr.io/tos"
+              target="_blank"
+              class="underline hover:text-white">Terms of Service</a
+            >
           </label>
         </div>
         {#if registerError}

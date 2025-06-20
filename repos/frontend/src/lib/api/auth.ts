@@ -1,22 +1,26 @@
-export async function loginUser(loginEmail: string, loginPassword: string) {
-  const res = await fetch("/api/login", {
+import { goto } from "$app/navigation";
+
+export async function loginUser(loginEmail: string, loginPassword: string): Promise<void> {
+  const res = await fetch("/api/auth/login", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      email: loginEmail,
-      password: loginPassword,
-    }),
+    body: JSON.stringify({ email: loginEmail, password: loginPassword }),
   });
-  const data = await res.json();
-  console.log(data);
+
+  if (!res.ok) {
+    const data = await res.json();
+    throw new Error(data.message || "Login failed");
+  }
+
+  goto("/");
 }
 
 export async function registerUser(
   registerUsername: string,
   registerEmail: string,
   registerPassword: string
-) {
-  const res = await fetch("/api/user", {
+): Promise<void> {
+  const res = await fetch("/api/auth/register", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -25,6 +29,11 @@ export async function registerUser(
       password: registerPassword,
     }),
   });
-  const data = await res.json();
-  console.log(data);
+
+  if (!res.ok) {
+    const data = await res.json();
+    throw new Error(data.message || "Registration failed");
+  }
+
+  goto("/");
 }

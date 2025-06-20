@@ -104,4 +104,50 @@ func RegisterUserRoutes(app *fiber.App) {
 			"user":    user,
 		})
 	})
+
+	app.Post("/auth/register", utils.ValidateBody[CreateUserRequest](), func(c *fiber.Ctx) error {
+		req := c.Locals("body").(CreateUserRequest)
+
+		hashedPassword, err := utils.GeneratePasswordHash(req.Password, utils.DefaultArgon2Config)
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error": "failed to hash password",
+			})
+		}
+
+		user := &models.User{
+			Username: req.Username,
+			Email:    req.Email,
+			Password: hashedPassword,
+			IsActive: true,
+		}
+
+		if err := repositories.CreateUser(user); err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error": "failed to create user",
+			})
+		}
+
+		signedToken, err := utils.GenerateJWT(user.ID)
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error": "failed to generate token",
+			})
+		}
+
+		c.Cookie(&fiber.Cookie{
+			Name:     "session",
+			Value:    signedToken,
+			Path:     "/",
+			HTTPOnly: true,
+			Secure:   true,
+			SameSite: "Lax",
+			Expires:  time.Now().Add(7 * 24 * time.Hour),
+		})
+
+		return c.Status(fiber.StatusCreated).JSON(fiber.Map{
+			"message": "user registered and logged in",
+			"user":    user,
+		})
+	})
 }

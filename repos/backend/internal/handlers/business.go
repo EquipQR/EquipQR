@@ -9,8 +9,7 @@ import (
 )
 
 type CreateBusinessRequest struct {
-	BusinessName string   `json:"businessName" validate:"required,min=2,max=64"`
-	LoginMethods []string `json:"loginMethods" validate:"required,min=1,dive,oneof=magic_link hardware_token sso_internal ldap"`
+	BusinessName string `json:"businessName" validate:"required,min=2,max=64"`
 }
 
 func RegisterBusinessRoutes(app *fiber.App) {
@@ -29,7 +28,6 @@ func RegisterBusinessRoutes(app *fiber.App) {
 		business := models.Business{
 			ID:           uuid.NewString(),
 			BusinessName: req.BusinessName,
-			LoginMethods: req.LoginMethods,
 		}
 
 		if err := repositories.CreateBusiness(&business); err != nil {
