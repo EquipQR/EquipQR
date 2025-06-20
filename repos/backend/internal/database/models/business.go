@@ -6,8 +6,9 @@ import (
 )
 
 type Business struct {
-	ID           string `gorm:"primaryKey;type:varchar(64);not null"`
-	BusinessName string `json:"businessName" validate:"required,min=2,max=64"`
+	ID           string   `gorm:"primaryKey;type:varchar(64);not null"`
+	BusinessName string   `json:"businessName" validate:"required,min=2,max=64"`
+	LoginMethods []string `json:"loginMethods" validate:"dive,oneof=magic_link hardware_token sso_internal ldap"`
 }
 
 func (business *Business) BeforeCreate(tx *gorm.DB) error {

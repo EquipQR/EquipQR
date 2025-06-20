@@ -1,13 +1,12 @@
 package handlers
 
 import (
-	"os"
 	"time"
 
+	"github.com/EquipQR/equipqr/backend/internal/database/models"
 	"github.com/EquipQR/equipqr/backend/internal/repositories"
 	"github.com/EquipQR/equipqr/backend/internal/utils"
 	"github.com/gofiber/fiber/v2"
-	"github.com/golang-jwt/jwt/v5"
 )
 
 type LoginRequest struct {
@@ -39,13 +38,7 @@ func RegisterUserRoutes(app *fiber.App) {
 			})
 		}
 
-		token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-			"user_id": user.ID,
-			"exp":     time.Now().Add(7 * 24 * time.Hour).Unix(), // 7 days
-		})
-
-		secret := os.Getenv("JWT_SECRET")
-		signedToken, err := token.SignedString([]byte(secret))
+		signedToken, err := utils.GenerateJWT(user.ID)
 		if err != nil {
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 				"error": "failed to generate token",
@@ -80,6 +73,35 @@ func RegisterUserRoutes(app *fiber.App) {
 		})
 		return c.JSON(fiber.Map{
 			"message": "logout successful",
+		})
+	})
+
+	app.Post("/user", utils.ValidateBody[CreateUserRequest](), func(c *fiber.Ctx) error {
+		req := c.Locals("body").(CreateUserRequest)
+
+		hashedPassword, err := utils.GeneratePasswordHash(req.Password, utils.DefaultArgon2Config)
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error": "failed to hash password",
+			})
+		}
+
+		user := &models.User{
+			Username: req.Username,
+			Email:    req.Email,
+			Password: hashedPassword,
+			IsActive: true,
+		}
+
+		if err := repositories.CreateUser(user); err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error": "failed to create user",
+			})
+		}
+
+		return c.Status(fiber.StatusCreated).JSON(fiber.Map{
+			"message": "user created",
+			"user":    user,
 		})
 	})
 }

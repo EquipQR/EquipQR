@@ -119,3 +119,20 @@
     @apply bg-background text-foreground;
   }
 }
+
+.error-text {
+  color: #ff4d4f;
+  animation: soft-glow-blink 2.5s ease-in-out infinite;
+}
+
+@keyframes soft-glow-blink {
+  0%,
+  100% {
+    opacity: 1;
+    text-shadow: 0 0 2px #ff4d4f;
+  }
+  50% {
+    opacity: 0.6;
+    text-shadow: 0 0 1px #ff4d4f;
+  }
+}

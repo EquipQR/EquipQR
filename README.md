@@ -11,6 +11,7 @@ Before running the application, you’ll need to configure environment variables
   * `APP_HOST`, `APP_PORT`: Where the backend server listens.
   * `SSL_CERT_PATH`, `SSL_KEY_PATH`: Path to TLS cert/key (required for HTTPS).
   * `CORS_ALLOW_ORIGINS`, `CORS_ALLOW_HEADERS`: CORS policy for API access.
+  * `JWT_SECRET`: Generate with: ```python3 -c "import base64, secrets; print(base64.urlsafe_b64encode(secrets.token_bytes(32)).decode())"```
 
 * **Frontend Configuration**
 
