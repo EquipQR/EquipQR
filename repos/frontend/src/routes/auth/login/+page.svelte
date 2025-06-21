@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount } from "svelte";
+  import { tick } from "svelte";
   import {
     Tabs,
     TabsList,
@@ -17,7 +17,6 @@
 
   let loginEmail = "";
   let loginPassword = "";
-
   let registerUsername = "";
   let registerEmail = "";
   let registerPassword = "";
@@ -27,6 +26,8 @@
 
   let loginError = "";
   let registerError = "";
+
+  let loggingIn = false;
 
   let altLoginMethods: Array<{ id: string; label: string }> = [
     { id: "magic_link", label: "Sign in with Magic Link" },
@@ -62,14 +63,19 @@
   }
 
   async function attemptLogin(): Promise<void> {
+    await tick();
     loginError = "";
+    loggingIn = true;
+
     if (!loginPassword) {
       loginError = "Password is required.";
+      loggingIn = false;
       return;
     }
     if (!validatePassword(loginPassword)) {
       loginError =
         "Password must be at least 8 characters and include a special character.";
+      loggingIn = false;
       return;
     }
 
@@ -78,6 +84,8 @@
     } catch (err) {
       loginError = (err as Error).message;
     }
+
+    loggingIn = false;
   }
 
   async function attemptRegister(): Promise<void> {
@@ -111,7 +119,7 @@
     if (event.key === "Enter") {
       if (loginStep === "email") {
         await continueToPassword();
-      } else if (loginStep === "password") {
+      } else if (loginStep === "password" && !loggingIn) {
         await attemptLogin();
       }
     }
@@ -124,20 +132,14 @@
   }
 </script>
 
-<div
-  class="dark min-h-screen flex items-center justify-center bg-black px-4 py-12 text-white"
->
-  <div
-    class="w-full max-w-md bg-black rounded-xl shadow-2xl p-8 space-y-6 border border-neutral-800"
-  >
+<div class="dark min-h-screen flex items-center justify-center bg-black px-4 py-12 text-white">
+  <div class="w-full max-w-md bg-black rounded-xl shadow-2xl p-8 space-y-6 border border-neutral-800">
     <div class="text-center space-y-1">
       <h3 class="text-3xl font-bold">EquipQR</h3>
     </div>
 
     <Tabs bind:value={tab}>
-      <TabsList
-        class="w-full grid grid-cols-2 gap-2 bg-neutral-900 rounded-md p-1"
-      >
+      <TabsList class="w-full grid grid-cols-2 gap-2 bg-neutral-900 rounded-md p-1">
         <TabsTrigger
           value="login"
           class="data-[state=active]:bg-black data-[state=active]:text-white rounded-md py-1"
@@ -203,16 +205,23 @@
           </div>
           <Button
             class="w-full mt-2 transition duration-150 active:scale-95"
-            onclick={attemptLogin}
+            disabled={loggingIn}
+            onclick={async () => {
+              await attemptLogin();
+            }}
           >
-            Sign In
+            {#if loggingIn}
+              <svg class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 12a8 8 0 018-8" />
+              </svg>
+            {:else}
+              Sign In
+            {/if}
           </Button>
         {/if}
 
         <Separator class="my-6 border-neutral-800" />
-        <p class="text-center text-sm text-neutral-500">
-          Choose another way to login
-        </p>
+        <p class="text-center text-sm text-neutral-500">Choose another way to login</p>
         <div class="flex flex-col gap-2">
           {#each altLoginMethods as method}
             <Button
@@ -262,11 +271,7 @@
         <div class="flex items-center space-x-2 pt-2">
           <Checkbox id="tos" bind:checked={agreedToTOS} />
           <label for="tos" class="text-sm text-neutral-400">
-            I agree to the <a
-              href="https://legal.equipqr.io/tos"
-              target="_blank"
-              class="underline hover:text-white">Terms of Service</a
-            >
+            I agree to the <a href="https://legal.equipqr.io/tos" target="_blank" class="underline hover:text-white">Terms of Service</a>
           </label>
         </div>
         {#if registerError}
