@@ -135,7 +135,7 @@
 <div class="dark min-h-screen flex items-center justify-center bg-black px-4 py-12 text-white">
   <div class="w-full max-w-md bg-black rounded-xl shadow-2xl p-8 space-y-6 border border-neutral-800">
     <div class="text-center space-y-1">
-      <h3 class="text-3xl font-bold">EquipQR</h3>
+      <img src="/app_logo_512_412.png" alt="EquipQR Logo" class="mx-auto h-32 w-auto" />
     </div>
 
     <Tabs bind:value={tab}>
