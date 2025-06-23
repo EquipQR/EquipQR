@@ -25,7 +25,7 @@ func RegisterUserRoutes(app *fiber.App) {
 			})
 		}
 
-		signedToken, err := utils.GenerateJWT(user.ID)
+		signedToken, err := utils.GenerateJWT(user.ID.String())
 		if err != nil {
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 				"error": "failed to generate token",
@@ -99,7 +99,7 @@ func RegisterUserRoutes(app *fiber.App) {
 			})
 		}
 
-		signedToken, err := utils.GenerateJWT(user.ID)
+		signedToken, err := utils.GenerateJWT(user.ID.String())
 		if err != nil {
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 				"error": "failed to generate token",

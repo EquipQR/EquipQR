@@ -19,10 +19,6 @@ func main() {
 		log.Println("Warning: No .env file found at", envPath)
 	}
 
-	if err := utils.InitPikaGenerator(1); err != nil {
-		log.Fatalf("Failed to initialize Pika ID generator: %v", err)
-	}
-
 	config := utils.LoadConfigFromEnv()
 	database.Init(config)
 

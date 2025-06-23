@@ -22,7 +22,7 @@ func RegisterBusinessRoutes(app *fiber.App) {
 		req := c.Locals("body").(utils.CreateBusinessRequest)
 
 		business := models.Business{
-			ID:           uuid.NewString(),
+			ID:           uuid.New(),
 			BusinessName: req.BusinessName,
 		}
 

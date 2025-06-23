@@ -5,6 +5,7 @@ import (
 	"github.com/EquipQR/equipqr/backend/internal/repositories"
 	"github.com/EquipQR/equipqr/backend/internal/utils"
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 )
 
 func RegisterIssueRoutes(app *fiber.App) {
@@ -20,25 +21,25 @@ func RegisterIssueRoutes(app *fiber.App) {
 	app.Post("/issue", utils.ValidateBody[utils.CreateIssueRequest](), func(c *fiber.Ctx) error {
 		req := c.Locals("body").(utils.CreateIssueRequest)
 
-		// Check that Equipment and Assignee exists
-		_, err := repositories.GetEquipmentByID(req.EquipmentID)
+		equipmentID, err := uuid.Parse(req.EquipmentID)
 		if err != nil {
 			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-				"error": "equipment not found",
+				"error": "invalid equipment_id",
 			})
 		}
-		_, err = repositories.GetUserByID(req.AssigneeID)
+
+		assigneeID, err := uuid.Parse(req.AssigneeID)
 		if err != nil {
 			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-				"error": "assignee not found",
+				"error": "invalid assignee_id",
 			})
 		}
 
 		issue := models.Issue{
 			Title:       req.Title,
 			Description: req.Description,
-			EquipmentID: req.EquipmentID,
-			AssigneeID:  req.AssigneeID,
+			EquipmentID: equipmentID,
+			AssigneeID:  assigneeID,
 		}
 
 		if err := repositories.CreateIssue(&issue); err != nil {

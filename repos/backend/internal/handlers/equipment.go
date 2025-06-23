@@ -7,6 +7,7 @@ import (
 	"github.com/EquipQR/equipqr/backend/internal/repositories"
 	"github.com/EquipQR/equipqr/backend/internal/utils"
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 	"gorm.io/datatypes"
 )
 
@@ -51,7 +52,7 @@ func RegisterEquipmentRoutes(app *fiber.App) {
 		}
 
 		equipment := models.Equipment{
-			BusinessID: req.BusinessID,
+			BusinessID: uuid.MustParse(req.BusinessID),
 			Status:     req.Status,
 			Type:       req.Type,
 			Location:   req.Location,
@@ -64,7 +65,7 @@ func RegisterEquipmentRoutes(app *fiber.App) {
 			})
 		}
 
-		created, err := repositories.GetEquipmentByID(equipment.ID)
+		created, err := repositories.GetEquipmentByID(equipment.ID.String())
 		if err != nil {
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 				"error": "created but failed to load full record",
