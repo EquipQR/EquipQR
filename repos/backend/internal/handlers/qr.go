@@ -6,6 +6,6 @@ import (
 )
 
 func RegisterQRCodeRoutes(app *fiber.App) {
-	app.Post("/generate-qr-zip", repositories.GenerateQRCodeZip)
-	app.Post("/generate-qr", repositories.GenerateSingleQRCode)
+	app.Post("/api/generate-qr-zip", repositories.GenerateQRCodeZip)
+	app.Post("/api/generate-qr", repositories.GenerateSingleQRCode)
 }

@@ -16,4 +16,4 @@ def generate_qr_code(data: str, filename: str, box_size: int = 10, border: int =
     img.save(filename)
 
 if __name__ == "__main__":
-    generate_qr_code("equipment_270373057686671360", "equipment_qr.png")
+    generate_qr_code("ed9ba222-80de-4e16-a0b9-efdb74f0ec44", "equipment_qr.png")

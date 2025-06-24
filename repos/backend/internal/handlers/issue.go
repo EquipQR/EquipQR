@@ -9,7 +9,7 @@ import (
 )
 
 func RegisterIssueRoutes(app *fiber.App) {
-	app.Get("/issue/:id", func(c *fiber.Ctx) error {
+	app.Get("/api/issue/:id", func(c *fiber.Ctx) error {
 		id := c.Params("id")
 		issue, err := repositories.GetIssueByID(id)
 		if err != nil {
@@ -18,7 +18,7 @@ func RegisterIssueRoutes(app *fiber.App) {
 		return c.JSON(issue)
 	})
 
-	app.Post("/issue", utils.ValidateBody[utils.CreateIssueRequest](), func(c *fiber.Ctx) error {
+	app.Post("/api/issue", utils.ValidateBody[utils.CreateIssueRequest](), func(c *fiber.Ctx) error {
 		req := c.Locals("body").(utils.CreateIssueRequest)
 
 		equipmentID, err := uuid.Parse(req.EquipmentID)

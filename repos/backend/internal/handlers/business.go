@@ -9,7 +9,7 @@ import (
 )
 
 func RegisterBusinessRoutes(app *fiber.App) {
-	app.Get("/business/:id", func(c *fiber.Ctx) error {
+	app.Get("/api/business/:id", func(c *fiber.Ctx) error {
 		id := c.Params("id")
 		business, err := repositories.GetBusinessByID(id)
 		if err != nil {
@@ -18,7 +18,7 @@ func RegisterBusinessRoutes(app *fiber.App) {
 		return c.JSON(business)
 	})
 
-	app.Post("/business", utils.ValidateBody[utils.CreateBusinessRequest](), func(c *fiber.Ctx) error {
+	app.Post("/api/business", utils.ValidateBody[utils.CreateBusinessRequest](), func(c *fiber.Ctx) error {
 		req := c.Locals("body").(utils.CreateBusinessRequest)
 
 		business := models.Business{

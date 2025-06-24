@@ -12,7 +12,7 @@ import (
 )
 
 func RegisterEquipmentRoutes(app *fiber.App) {
-	app.Get("/equipment/:id/issues", func(c *fiber.Ctx) error {
+	app.Get("/api/equipment/:id/issues", func(c *fiber.Ctx) error {
 		equipmentID := c.Params("id")
 		issues, err := repositories.GetIssuesByEquipmentID(equipmentID)
 		if err != nil {
@@ -21,7 +21,7 @@ func RegisterEquipmentRoutes(app *fiber.App) {
 		return c.JSON(issues)
 	})
 
-	app.Get("/equipment/:id", func(c *fiber.Ctx) error {
+	app.Get("/api/equipment/:id", func(c *fiber.Ctx) error {
 		id := c.Params("id")
 
 		eq, err := repositories.GetEquipmentByID(id)
@@ -34,7 +34,7 @@ func RegisterEquipmentRoutes(app *fiber.App) {
 		return c.JSON(eq)
 	})
 
-	app.Post("/equipment", utils.ValidateBody[utils.CreateEquipmentRequest](), func(c *fiber.Ctx) error {
+	app.Post("/api/equipment", utils.ValidateBody[utils.CreateEquipmentRequest](), func(c *fiber.Ctx) error {
 		req := c.Locals("body").(utils.CreateEquipmentRequest)
 
 		_, err := repositories.GetBusinessByID(req.BusinessID)

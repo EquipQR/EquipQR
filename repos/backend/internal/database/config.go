@@ -33,3 +33,16 @@ func Migrate(models ...any) {
 		log.Fatalf("Failed to migrate database: %v", err)
 	}
 }
+
+func Close() {
+	sqlDB, err := DB.DB()
+	if err != nil {
+		log.Printf("Error retrieving sql.DB from gorm.DB: %v\n", err)
+		return
+	}
+	if err := sqlDB.Close(); err != nil {
+		log.Printf("Error closing database connection: %v\n", err)
+	} else {
+		log.Println("Database connection closed successfully.")
+	}
+}

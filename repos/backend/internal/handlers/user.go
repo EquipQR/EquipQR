@@ -8,7 +8,7 @@ import (
 )
 
 func RegisterUserRoutes(app *fiber.App) {
-	app.Post("/auth/login", utils.ValidateBody[utils.LoginRequest](), func(c *fiber.Ctx) error {
+	app.Post("/api/auth/login", utils.ValidateBody[utils.LoginRequest](), func(c *fiber.Ctx) error {
 		req := c.Locals("body").(utils.LoginRequest)
 
 		user, err := repositories.GetUserByEmail(req.Email)
@@ -40,14 +40,14 @@ func RegisterUserRoutes(app *fiber.App) {
 		})
 	})
 
-	app.Post("/auth/logout", func(c *fiber.Ctx) error {
+	app.Post("/api/auth/logout", func(c *fiber.Ctx) error {
 		utils.SetOrRemoveSessionCookie(c, "")
 		return c.JSON(fiber.Map{
 			"message": "logout successful",
 		})
 	})
 
-	app.Post("/user", utils.ValidateBody[utils.CreateUserRequest](), func(c *fiber.Ctx) error {
+	app.Post("/api/user", utils.ValidateBody[utils.CreateUserRequest](), func(c *fiber.Ctx) error {
 		req := c.Locals("body").(utils.CreateUserRequest)
 
 		hashedPassword, err := utils.GeneratePasswordHash(req.Password, utils.DefaultArgon2Config)
@@ -76,7 +76,7 @@ func RegisterUserRoutes(app *fiber.App) {
 		})
 	})
 
-	app.Post("/auth/register", utils.ValidateBody[utils.CreateUserRequest](), func(c *fiber.Ctx) error {
+	app.Post("/api/auth/register", utils.ValidateBody[utils.CreateUserRequest](), func(c *fiber.Ctx) error {
 		req := c.Locals("body").(utils.CreateUserRequest)
 
 		hashedPassword, err := utils.GeneratePasswordHash(req.Password, utils.DefaultArgon2Config)
@@ -114,7 +114,7 @@ func RegisterUserRoutes(app *fiber.App) {
 		})
 	})
 
-	app.Get("/user", func(c *fiber.Ctx) error {
+	app.Get("/api/user", func(c *fiber.Ctx) error {
 		userID, err := utils.ValidateJWTFromCookie(c)
 		if err != nil || userID == "" {
 			return c.Status(fiber.StatusForbidden).JSON(fiber.Map{

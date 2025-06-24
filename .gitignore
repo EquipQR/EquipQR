@@ -46,3 +46,4 @@ repos/frontend/*.local
 
 # Built static files from frontend
 repos/backend/web
+repos/backend/tmp
