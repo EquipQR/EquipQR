@@ -1,8 +1,7 @@
 <script lang="ts">
-    import '../app.css';
-	import { Toaster } from '$lib/components/ui/sonner/index.js';
-	let { children } = $props();
+  import "../app.css";
+  let { children } = $props();
 </script>
 
-<Toaster /> <!-- keeps toasts alive across page navigation -->
+<!-- keeps toasts alive across page navigation -->
 {@render children?.()}
