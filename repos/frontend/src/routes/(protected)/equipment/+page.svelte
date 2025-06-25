@@ -33,6 +33,7 @@
   let issues: Issue[] = [];
 
   export let data: { equipmentId: string | null };
+  
   onMount(async () => {
     if (data.equipmentId) {
       try {

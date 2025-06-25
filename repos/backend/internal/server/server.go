@@ -33,6 +33,7 @@ func RunServer(config utils.Config) {
 		&models.User{},
 		&models.Business{},
 		&models.UserBusiness{},
+		&models.PendingJoinRequest{},
 		&models.Issue{},
 		&models.Equipment{},
 	)
@@ -40,8 +41,9 @@ func RunServer(config utils.Config) {
 	app := fiber.New()
 
 	app.Use(cors.New(cors.Config{
-		AllowOrigins: config.CORSAllowOrigins,
-		AllowHeaders: config.CORSAllowHeaders,
+		AllowOrigins:     config.CORSAllowOrigins,
+		AllowHeaders:     config.CORSAllowHeaders,
+		AllowCredentials: true,
 	}))
 
 	handlers.RegisterHealthRoutes(app)

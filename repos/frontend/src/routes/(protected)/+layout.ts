@@ -8,6 +8,6 @@ export async function load({fetch}) {
 
 
     } catch (err) {
-        throw redirect(302, "/auth/login");
+        throw redirect(302, "/portal/login");
     }
 }

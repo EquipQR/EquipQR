@@ -5,6 +5,7 @@ import (
 	"github.com/EquipQR/equipqr/backend/internal/repositories"
 	"github.com/EquipQR/equipqr/backend/internal/utils"
 	"github.com/gofiber/fiber/v2"
+	"github.com/lib/pq"
 )
 
 func RegisterUserRoutes(app *fiber.App) {
@@ -47,35 +48,6 @@ func RegisterUserRoutes(app *fiber.App) {
 		})
 	})
 
-	app.Post("/api/user", utils.ValidateBody[utils.CreateUserRequest](), func(c *fiber.Ctx) error {
-		req := c.Locals("body").(utils.CreateUserRequest)
-
-		hashedPassword, err := utils.GeneratePasswordHash(req.Password, utils.DefaultArgon2Config)
-		if err != nil {
-			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-				"error": "failed to hash password",
-			})
-		}
-
-		user := &models.User{
-			Username: req.Username,
-			Email:    req.Email,
-			Password: hashedPassword,
-			IsActive: true,
-		}
-
-		if err := repositories.CreateUser(user); err != nil {
-			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-				"error": "failed to create user",
-			})
-		}
-
-		return c.Status(fiber.StatusCreated).JSON(fiber.Map{
-			"message": "user created",
-			"user":    user,
-		})
-	})
-
 	app.Post("/api/auth/register", utils.ValidateBody[utils.CreateUserRequest](), func(c *fiber.Ctx) error {
 		req := c.Locals("body").(utils.CreateUserRequest)
 
@@ -99,6 +71,54 @@ func RegisterUserRoutes(app *fiber.App) {
 			})
 		}
 
+		// Branch A: Joining existing business
+		if req.BusinessID != "" {
+			business, err := repositories.GetBusinessByID(req.BusinessID)
+			if err != nil {
+				return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid business ID"})
+			}
+
+			if err := repositories.CreatePendingJoinRequest(user.ID, business.ID); err != nil {
+				return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "failed to request business approval"})
+			}
+
+			return c.Status(fiber.StatusAccepted).JSON(fiber.Map{
+				"message": "registration submitted and pending business approval",
+				"user":    user,
+			})
+		}
+
+		// Branch B: Creating new business
+		if req.BusinessName == "" || req.BusinessType == "" {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error": "business name and type required for new business creation",
+			})
+		}
+
+		business := &models.Business{
+			BusinessName:    req.BusinessName,
+			BusinessEmail:   req.BusinessEmail,
+			Phone:           req.Phone,
+			CountryCode:     req.CountryCode,
+			Type:            req.BusinessType,
+			CompanySize:     req.CompanySize,
+			Country:         req.Country,
+			UserCanRegister: false,
+			LoginMethods:    pq.StringArray{"password"},
+		}
+
+		if err := repositories.CreateBusiness(business); err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error": "failed to create business",
+			})
+		}
+
+		if err := repositories.AddUserToBusiness(user.ID.String(), business.ID.String(), true); err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error": "failed to assign user to business",
+			})
+		}
+
 		signedToken, err := utils.GenerateJWT(user.ID.String())
 		if err != nil {
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -109,8 +129,9 @@ func RegisterUserRoutes(app *fiber.App) {
 		utils.SetOrRemoveSessionCookie(c, signedToken)
 
 		return c.Status(fiber.StatusCreated).JSON(fiber.Map{
-			"message": "user registered and logged in",
-			"user":    user,
+			"message":  "user registered and business created",
+			"user":     user,
+			"business": business,
 		})
 	})
 
