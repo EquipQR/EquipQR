@@ -2,7 +2,7 @@
   import { Input } from "$lib/components/ui/input";
   import { Button } from "$lib/components/ui/button";
   import { Label } from "$lib/components/ui/label";
-  import { getNames, getCode } from "country-list";
+  import { getNames } from "country-list";
   import { registerBusiness } from "$lib/api/portal";
 
   let username = "";
@@ -37,44 +37,34 @@
     "500+ employees",
   ];
   const countries: string[] = [...getNames(), "Other"];
-
-  async function handleRegisterBusiness(): Promise<void> {
-    registerBusiness(
-      username,
-      businessEmail,
-      password,
-      companyName,
-      businessEmail,
-      phoneNumber,
-      industry,
-      companySize,
-      country
-    );
-  }
 </script>
 
-<div
-  class="dark min-h-screen flex items-center justify-center bg-black px-4 py-12 text-white"
->
-  <div
-    class="w-full max-w-3xl bg-black rounded-xl shadow-2xl p-8 space-y-8 border border-neutral-800"
-  >
+<div class="dark min-h-screen flex items-center justify-center bg-black px-4 py-12 text-white">
+  <div class="w-full max-w-3xl bg-black rounded-xl shadow-2xl p-8 space-y-8 border border-neutral-800">
     <div class="text-center space-y-1">
-      <img
-        src="/app_logo_512_412.png"
-        alt="EquipQR Logo"
-        class="mx-auto h-28 w-auto"
-      />
-      <h1 class="text-3xl font-bold tracking-tight">
-        Get Started with EquipQR
-      </h1>
+      <img src="/app_logo_512_412.png" alt="EquipQR Logo" class="mx-auto h-28 w-auto" />
+      <h1 class="text-3xl font-bold tracking-tight">Get Started with EquipQR</h1>
       <p class="text-neutral-500 text-sm">
-        Set up your business account in minutes and unlock early access
-        features.
+        Set up your business account in minutes and unlock early access features.
       </p>
     </div>
 
-    <form on:submit|preventDefault={handleRegisterBusiness} class="space-y-6">
+    <form
+      on:submit|preventDefault={() =>
+        registerBusiness(
+          username,
+          businessEmail,
+          password,
+          companyName,
+          businessEmail,
+          phoneNumber,
+          industry,
+          companySize,
+          country
+        )
+      }
+      class="space-y-6"
+    >
       <div class="grid md:grid-cols-2 gap-6">
         <div>
           <Label for="username">Username</Label>
@@ -188,10 +178,7 @@
       </div>
 
       <div class="pt-4">
-        <Button
-          type="submit"
-          class="w-full transition duration-150 active:scale-95"
-        >
+        <Button type="submit" class="w-full transition duration-150 active:scale-95">
           Join Early Access
         </Button>
       </div>
