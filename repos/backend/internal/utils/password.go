@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"regexp"
 	"strings"
 
 	"golang.org/x/crypto/argon2"
@@ -66,4 +67,17 @@ func ComparePasswordHash(encodedHash string, password string, cfg Argon2Config) 
 	}
 
 	return true, nil
+}
+
+func ValidatePasswordStrength(password string) error {
+	if len(password) < 8 {
+		return errors.New("password must be at least 8 characters long")
+	}
+	hasUpper := regexp.MustCompile(`[A-Z]`).MatchString(password)
+	hasSpecial := regexp.MustCompile(`[!@#\$%\^&\*\(\)_\+\-=\[\]{};':"\\|,.<>\/?]+`).MatchString(password)
+
+	if !hasUpper || !hasSpecial {
+		return errors.New("password must include at least one uppercase letter and one special character")
+	}
+	return nil
 }

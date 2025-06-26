@@ -34,6 +34,10 @@ func CreateUser(user *models.User) error {
 }
 
 func RegisterNewUser(req utils.CreateUserRequest) (*models.User, *models.Business, string, error) {
+	if err := utils.ValidatePasswordStrength(req.Password); err != nil {
+		return nil, nil, "", err
+	}
+
 	hashedPassword, err := utils.GeneratePasswordHash(req.Password, utils.DefaultArgon2Config)
 	if err != nil {
 		return nil, nil, "", errors.New("failed to hash password")
@@ -50,7 +54,6 @@ func RegisterNewUser(req utils.CreateUserRequest) (*models.User, *models.Busines
 		return nil, nil, "", errors.New("failed to create user")
 	}
 
-	// Option A: Join existing business
 	if req.BusinessID != "" {
 		business, err := GetBusinessByID(req.BusinessID)
 		if err != nil {
@@ -61,11 +64,9 @@ func RegisterNewUser(req utils.CreateUserRequest) (*models.User, *models.Busines
 			return user, nil, "", errors.New("failed to request business approval")
 		}
 
-		// Return no business because it's pending
 		return user, nil, "", nil
 	}
 
-	// Option B: Create new business
 	if req.BusinessName == "" || req.BusinessType == "" {
 		return nil, nil, "", errors.New("business name and type required for new business creation")
 	}
