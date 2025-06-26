@@ -116,7 +116,14 @@ func checkFrontendHash() {
 
 	storedHash := string(bytesTrimSpace(stored))
 	if storedHash != hash {
-		log.Println("⚠️  Frontend source has changed since last build. Rebuild the frontend!")
+		fmt.Println()
+		fmt.Println("🔁  Frontend build hash mismatch detected!")
+		fmt.Printf("📦  Stored Hash:    %s\n", color.New(color.FgHiRed).Sprint(storedHash))
+		fmt.Printf("📁  Current Source: %s\n", color.New(color.FgHiGreen).Sprint(hash))
+		fmt.Println("⚠️   Rebuild the frontend to match the current source.")
+		fmt.Println()
+	} else {
+		fmt.Printf("✅  Frontend hash verified: %s\n", color.New(color.FgGreen).Sprint(hash))
 	}
 }
 
