@@ -39,7 +39,7 @@ func LoadConfigFromEnv() Config {
 		log.Fatalf("Invalid JWT_EXPIRY_MINUTES: %v", err)
 	}
 
-	cookieExpiryStr := getEnv("JWT_EXPIRY_MINUTES", "15")
+	cookieExpiryStr := getEnv("COOKIE_EXPIRY_DAYS", "15")
 	cookieExpiry, err := strconv.Atoi(cookieExpiryStr)
 	if err != nil {
 		log.Fatalf("Invalid COOKIE_EXPIRY_DAYS: %v", err)

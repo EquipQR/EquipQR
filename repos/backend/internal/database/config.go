@@ -3,10 +3,13 @@ package database
 import (
 	"fmt"
 	"log"
+	"os"
+	"time"
 
 	"github.com/EquipQR/equipqr/backend/internal/utils"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
 var DB *gorm.DB
@@ -17,7 +20,19 @@ func Init(config utils.Config) {
 		config.Host, config.User, config.Password, config.Name, config.Port, config.SSLMode, config.TimeZone,
 	)
 
-	conn, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	gormLogger := logger.New(
+		log.New(os.Stdout, "\r\n", log.LstdFlags),
+		logger.Config{
+			SlowThreshold:             time.Second,
+			LogLevel:                  logger.Warn, // show only warnings and errors
+			IgnoreRecordNotFoundError: true,        // suppress 'record not found'
+			Colorful:                  true,
+		},
+	)
+
+	conn, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
+		Logger: gormLogger,
+	})
 
 	if err != nil {
 		log.Fatalf("Failed to connect to PostgreSQL: %v", err)
@@ -27,7 +42,6 @@ func Init(config utils.Config) {
 
 	log.Printf("Connected to PostgreSQL at %s:%s as %s", config.Host, config.Port, config.User)
 }
-
 func Migrate(models ...any) {
 	if err := DB.AutoMigrate(models...); err != nil {
 		log.Fatalf("Failed to migrate database: %v", err)

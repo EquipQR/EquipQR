@@ -58,7 +58,7 @@ func SetOrRemoveSessionCookie(c *fiber.Ctx, token string) {
 		Path:     "/",
 		HTTPOnly: true,
 		Secure:   true,
-		SameSite: "None",
+		SameSite: "Lax",
 	}
 
 	if token == "" {

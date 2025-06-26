@@ -4,6 +4,7 @@ import (
 	"github.com/EquipQR/equipqr/backend/internal/database"
 	"github.com/EquipQR/equipqr/backend/internal/database/models"
 	"github.com/google/uuid"
+	"gorm.io/gorm"
 )
 
 func GetBusinessByID(id string) (*models.Business, error) {
@@ -52,14 +53,12 @@ func AddUserToBusiness(userID string, businessID string, isAdmin bool) error {
 		IsAdmin:    isAdmin,
 	}
 
-	// Prevent duplicate entries
 	var existing models.UserBusiness
 	err := database.DB.
 		Where("user_id = ? AND business_id = ?", entry.UserID, entry.BusinessID).
-		First(&existing).Error
+		Take(&existing).Error
 
 	if err == nil {
-		// Already exists — optionally promote to admin
 		if !existing.IsAdmin && isAdmin {
 			existing.IsAdmin = true
 			return database.DB.Save(&existing).Error
@@ -67,5 +66,9 @@ func AddUserToBusiness(userID string, businessID string, isAdmin bool) error {
 		return nil
 	}
 
-	return database.DB.Create(&entry).Error
+	if err == gorm.ErrRecordNotFound {
+		return database.DB.Create(&entry).Error
+	}
+
+	return err
 }
