@@ -4,7 +4,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
-	"encoding/json"
+	"fmt"
 	"io/fs"
 	"log"
 	"os"
@@ -18,6 +18,7 @@ import (
 	"github.com/EquipQR/equipqr/backend/internal/database/models"
 	"github.com/EquipQR/equipqr/backend/internal/handlers"
 	"github.com/EquipQR/equipqr/backend/internal/utils"
+	"github.com/fatih/color"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 )
@@ -39,7 +40,11 @@ func RunServer(config utils.Config) {
 		&models.Equipment{},
 	)
 
-	app := fiber.New()
+	app := fiber.New(fiber.Config{
+		AppName:               "EquipQR",
+		ServerHeader:          "EquipQR-Server",
+		DisableStartupMessage: true, // ← disables Fiber's built-in log
+	})
 
 	app.Use(cors.New(cors.Config{
 		AllowOrigins:     config.CORSAllowOrigins,
@@ -145,45 +150,35 @@ func bytesTrimSpace(b []byte) string {
 }
 
 func printStartupBanner(config utils.Config) {
-	log.Println("🚀 Starting EquipQR server with the following configuration:")
-	printConfig := struct {
-		AppHost          string `json:"AppHost"`
-		AppPort          string `json:"AppPort"`
-		SSL_CertPath     string `json:"SSL_CertPath"`
-		SSL_KeyPath      string `json:"SSL_KeyPath"`
-		PostgresHost     string `json:"PostgresHost"`
-		PostgresPort     string `json:"PostgresPort"`
-		PostgresUser     string `json:"PostgresUser"`
-		PostgresDB       string `json:"PostgresDB"`
-		PostgresSSLMode  string `json:"PostgresSSLMode"`
-		PostgresTimeZone string `json:"PostgresTimeZone"`
-		CORSAllowOrigins string `json:"CORSAllowOrigins"`
-		CORSAllowHeaders string `json:"CORSAllowHeaders"`
-		JWTExpiryMinutes int    `json:"JWTExpiryMinutes"`
-		CookieExpiryDays int    `json:"CookieExpiryDays"`
-	}{
-		AppHost:          config.App_Host,
-		AppPort:          config.App_Port,
-		SSL_CertPath:     config.SSL_CertPath,
-		SSL_KeyPath:      config.SSL_KeyPath,
-		PostgresHost:     config.Host,
-		PostgresPort:     config.Port,
-		PostgresUser:     config.User,
-		PostgresDB:       config.Name,
-		PostgresSSLMode:  config.SSLMode,
-		PostgresTimeZone: config.TimeZone,
-		CORSAllowOrigins: config.CORSAllowOrigins,
-		CORSAllowHeaders: config.CORSAllowHeaders,
-		JWTExpiryMinutes: config.JWT_Expiry_Minutes,
-		CookieExpiryDays: config.Cookie_Expiry_Days,
-	}
+	bold := color.New(color.FgWhite, color.Bold).SprintFunc()
+	section := color.New(color.FgCyan).SprintFunc()
+	key := color.New(color.FgHiBlack).SprintFunc()
+	value := color.New(color.FgGreen).SprintFunc()
+	dim := color.New(color.FgHiBlack).SprintFunc()
 
-	configJSON, err := json.MarshalIndent(printConfig, "", "  ")
-	if err != nil {
-		log.Println("⚠️  Failed to print config:", err)
-		return
-	}
+	log.Println(bold("🚀 EquipQR server is starting up..."))
+	log.Println(dim("────────────────────────────────────"))
 
-	log.Println(string(configJSON))
-	log.Println("────────────────────────────────────────────────────")
+	fmt.Println(section("▸ Server"))
+	fmt.Printf("   %s %s:%s\n", key("Host:         "), value(config.App_Host), value(config.App_Port))
+	fmt.Printf("   %s %s\n", key("TLS Cert:     "), value(config.SSL_CertPath))
+	fmt.Printf("   %s %s\n", key("TLS Key:      "), value(config.SSL_KeyPath))
+
+	fmt.Println(section("▸ Database"))
+	fmt.Printf("   %s %s\n", key("Host:         "), value(config.Host))
+	fmt.Printf("   %s %s\n", key("Port:         "), value(config.Port))
+	fmt.Printf("   %s %s\n", key("Name:         "), value(config.Name))
+	fmt.Printf("   %s %s\n", key("User:         "), value(config.User))
+	fmt.Printf("   %s %s\n", key("SSL Mode:     "), value(config.SSLMode))
+	fmt.Printf("   %s %s\n", key("Time Zone:    "), value(config.TimeZone))
+
+	fmt.Println(section("▸ Auth"))
+	fmt.Printf("   %s %d min\n", key("JWT Expiry:   "), config.JWT_Expiry_Minutes)
+	fmt.Printf("   %s %d days\n", key("Cookie Expiry:"), config.Cookie_Expiry_Days)
+
+	fmt.Println(section("▸ CORS"))
+	fmt.Printf("   %s %s\n", key("Allow Origins:"), value(config.CORSAllowOrigins))
+	fmt.Printf("   %s %s\n", key("Allow Headers:"), value(config.CORSAllowHeaders))
+
+	log.Println(dim("────────────────────────────────────"))
 }
