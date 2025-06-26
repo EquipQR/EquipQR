@@ -42,7 +42,6 @@ func ValidateJWT(tokenString string) (string, error) {
 		return GetJWTSecret(), nil
 	})
 	if err != nil {
-		fmt.Println("❌ JWT parse error:", err)
 		return "", err
 	}
 
@@ -56,7 +55,6 @@ func ValidateJWT(tokenString string) (string, error) {
 
 func GetJWTSecret() []byte {
 	secret := strings.TrimSpace(AppConfig.JWT_Secret)
-	fmt.Printf("🔐 GetJWTSecret() returning (sanitized): %q\n", secret)
 	return []byte(secret)
 }
 
@@ -81,25 +79,16 @@ func SetOrRemoveSessionCookie(c *fiber.Ctx, token string) {
 
 func ValidateJWTFromCookie(c *fiber.Ctx) (string, error) {
 
-	fmt.Println("JWT secret in app:", string(GetJWTSecret()))
-
 	cookie := c.Cookies("session")
-	fmt.Println("🍪 Session cookie read:", cookie)
-	parts := strings.Split(cookie, ".")
-	if len(parts) != 3 {
-		fmt.Println("⚠️ Token malformed:", cookie)
-	}
+
 	if cookie == "" {
-		fmt.Println("⚠️ No session cookie found")
 		return "", fiber.ErrUnauthorized
 	}
 
 	userID, err := ValidateJWT(cookie)
 	if err != nil {
-		fmt.Println("❌ JWT validation failed:", err)
 		return "", fiber.ErrUnauthorized
 	}
 
-	fmt.Println("✅ JWT valid, userID:", userID)
 	return userID, nil
 }

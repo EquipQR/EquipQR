@@ -1,9 +1,7 @@
 package main
 
 import (
-	"fmt"
 	"log"
-	"os"
 	"path/filepath"
 
 	"github.com/EquipQR/equipqr/backend/internal/repositories"
@@ -17,7 +15,6 @@ func main() {
 	if err := godotenv.Load(envPath); err != nil {
 		log.Println("Warning: No .env file found at", envPath)
 	}
-	fmt.Println("💡 JWT_SECRET from env:", os.Getenv("JWT_SECRET"))
 
 	config := utils.LoadConfigFromEnv()
 	repositories.InitWebAuthn()

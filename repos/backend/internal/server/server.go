@@ -45,10 +45,6 @@ func RunServer(config utils.Config) {
 		ServerHeader:          "EquipQR-Server",
 		DisableStartupMessage: true, // ← disables Fiber's built-in log
 	})
-	app.Use(func(c *fiber.Ctx) error {
-		fmt.Println("🌐 Incoming request:", c.Method(), c.OriginalURL())
-		return c.Next()
-	})
 
 	app.Use(cors.New(cors.Config{
 		AllowOrigins:     config.CORSAllowOrigins,
