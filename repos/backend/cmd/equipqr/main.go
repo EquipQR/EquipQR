@@ -4,6 +4,7 @@ import (
 	"log"
 	"path/filepath"
 
+	"github.com/EquipQR/equipqr/backend/internal/repositories"
 	"github.com/EquipQR/equipqr/backend/internal/server"
 	"github.com/EquipQR/equipqr/backend/internal/utils"
 	"github.com/joho/godotenv"
@@ -16,5 +17,6 @@ func main() {
 	}
 
 	config := utils.LoadConfigFromEnv()
+	repositories.InitWebAuthn()
 	server.RunServer(config)
 }
