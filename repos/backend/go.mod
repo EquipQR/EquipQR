@@ -4,6 +4,7 @@ go 1.23.2
 
 require (
 	github.com/duo-labs/webauthn v0.0.0-20221205164246-ebaf9b74c6ec
+	github.com/fatih/color v1.18.0
 	github.com/go-playground/validator/v10 v10.26.0
 	github.com/gofiber/fiber/v2 v2.52.8
 	github.com/golang-jwt/jwt/v5 v5.2.2
@@ -34,7 +35,6 @@ require (
 	github.com/dustin/go-humanize v1.0.0 // indirect
 	github.com/envoyproxy/go-control-plane v0.9.9-0.20210217033140-668b12f5399d // indirect
 	github.com/envoyproxy/protoc-gen-validate v0.6.1 // indirect
-	github.com/fatih/color v1.18.0 // indirect
 	github.com/form3tech-oss/jwt-go v3.2.3+incompatible // indirect
 	github.com/fullstorydev/grpcurl v1.8.1 // indirect
 	github.com/fxamacker/cbor/v2 v2.4.0 // indirect
