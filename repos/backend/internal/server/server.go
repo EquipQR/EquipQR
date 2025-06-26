@@ -34,6 +34,7 @@ func RunServer(config utils.Config) {
 		&models.Business{},
 		&models.UserBusiness{},
 		&models.PendingJoinRequest{},
+		&models.Credential{},
 		&models.Issue{},
 		&models.Equipment{},
 	)
