@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"github.com/EquipQR/equipqr/backend/internal/repositories"
-	"github.com/EquipQR/equipqr/backend/internal/utils"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 )
@@ -32,28 +31,25 @@ func getPendingJoinRequests(c *fiber.Ctx) error {
 }
 
 func approvePendingJoin(c *fiber.Ctx) error {
-	var req utils.ApproveJoinRequest
+	type ApproveJoinRequest struct {
+		RequestID string `json:"request_id"`
+	}
+
+	var req ApproveJoinRequest
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "invalid request body",
 		})
 	}
 
-	userID, err := uuid.Parse(req.UserID)
+	requestID, err := uuid.Parse(req.RequestID)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "invalid user ID",
+			"error": "invalid request ID",
 		})
 	}
 
-	businessID, err := uuid.Parse(req.BusinessID)
-	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "invalid business ID",
-		})
-	}
-
-	if err := repositories.ApprovePendingJoin(userID, businessID); err != nil {
+	if err := repositories.ApprovePendingJoin(requestID); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "failed to approve request",
 		})
