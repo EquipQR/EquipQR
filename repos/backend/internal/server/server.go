@@ -51,6 +51,7 @@ func RunServer(config utils.Config) {
 	handlers.RegisterEquipmentRoutes(app)
 	handlers.RegisterPendingRoutes(app)
 	handlers.RegisterBusinessRoutes(app)
+	handlers.RegisterWebAuthnRoutes(app)
 	handlers.RegisterIssueRoutes(app)
 	handlers.RegisterQRCodeRoutes(app)
 
