@@ -8,6 +8,7 @@ export async function loginUser(
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email: loginEmail, password: loginPassword }),
+    credentials: "include",
   });
 
   if (!res.ok) {
@@ -31,6 +32,7 @@ export async function registerUser(
       email: registerEmail,
       password: registerPassword,
     }),
+    credentials: "include"
   });
 
   if (!res.ok) {
@@ -51,9 +53,9 @@ export async function getUserCurrent(fetchFn: typeof fetch): Promise<{
 }> {
   const res = await fetchFn("/api/user", {
     method: "GET",
-    headers: { Accept: "applications/json" },
+    headers: { Accept: "application/json" },
+    credentials: "include"
   });
-
   if (res.status === 401 || res.status === 403) {
     throw new Error("Unauthorized");
   }
@@ -76,6 +78,6 @@ export async function logout(): Promise<void> {
   } catch (err) {
     console.error("Logout failed:", err);
   } finally {
-    await goto("/auth/login");
+    await goto("/portal/login");
   }
 }

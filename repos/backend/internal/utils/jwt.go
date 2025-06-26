@@ -1,6 +1,8 @@
 package utils
 
 import (
+	"fmt"
+	"strings"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -32,23 +34,30 @@ func GenerateJWT(username string) (string, error) {
 }
 
 func ValidateJWT(tokenString string) (string, error) {
+	if tokenString == "" {
+		return "", fmt.Errorf("empty JWT string")
+	}
+
 	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (interface{}, error) {
 		return GetJWTSecret(), nil
 	})
 	if err != nil {
+		fmt.Println("❌ JWT parse error:", err)
 		return "", err
 	}
 
 	claims, ok := token.Claims.(*Claims)
 	if !ok || !token.Valid {
-		return "", err
+		return "", fmt.Errorf("invalid token or claims")
 	}
 
 	return claims.UserID, nil
 }
 
 func GetJWTSecret() []byte {
-	return []byte(AppConfig.JWT_Secret)
+	secret := strings.TrimSpace(AppConfig.JWT_Secret)
+	fmt.Printf("🔐 GetJWTSecret() returning (sanitized): %q\n", secret)
+	return []byte(secret)
 }
 
 func SetOrRemoveSessionCookie(c *fiber.Ctx, token string) {
@@ -58,7 +67,7 @@ func SetOrRemoveSessionCookie(c *fiber.Ctx, token string) {
 		Path:     "/",
 		HTTPOnly: true,
 		Secure:   true,
-		SameSite: "Lax",
+		SameSite: "None",
 	}
 
 	if token == "" {
@@ -71,16 +80,26 @@ func SetOrRemoveSessionCookie(c *fiber.Ctx, token string) {
 }
 
 func ValidateJWTFromCookie(c *fiber.Ctx) (string, error) {
-	cookie := c.Cookies("session")
-	if cookie == "" {
-		return "", fiber.ErrUnauthorized
 
+	fmt.Println("JWT secret in app:", string(GetJWTSecret()))
+
+	cookie := c.Cookies("session")
+	fmt.Println("🍪 Session cookie read:", cookie)
+	parts := strings.Split(cookie, ".")
+	if len(parts) != 3 {
+		fmt.Println("⚠️ Token malformed:", cookie)
+	}
+	if cookie == "" {
+		fmt.Println("⚠️ No session cookie found")
+		return "", fiber.ErrUnauthorized
 	}
 
 	userID, err := ValidateJWT(cookie)
 	if err != nil {
+		fmt.Println("❌ JWT validation failed:", err)
 		return "", fiber.ErrUnauthorized
 	}
 
+	fmt.Println("✅ JWT valid, userID:", userID)
 	return userID, nil
 }

@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"fmt"
+
 	"github.com/EquipQR/equipqr/backend/internal/repositories"
 	"github.com/EquipQR/equipqr/backend/internal/utils"
 	"github.com/gofiber/fiber/v2"
@@ -79,20 +81,38 @@ func handleRegister(c *fiber.Ctx) error {
 }
 
 func handleGetUser(c *fiber.Ctx) error {
+	cookie := c.Cookies("session")
+	fmt.Println("Fetching user")
+	if cookie == "" {
+		fmt.Println("No 'token' cookie found in request")
+	} else {
+		fmt.Println("Received cookie 'token':", cookie)
+	}
+
 	userID, err := utils.ValidateJWTFromCookie(c)
 	if err != nil || userID == "" {
+		fmt.Println("JWT validation failed:", err)
 		return c.Status(fiber.StatusForbidden).JSON(fiber.Map{
 			"error": "unauthorized",
 		})
 	}
+	fmt.Println("JWT validated, userID:", userID)
 
 	user, err := repositories.GetUserByID(userID)
-	if err != nil || user == nil {
+	if err != nil {
+		fmt.Println("Error fetching user from DB:", err)
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"error": "user not found",
+		})
+	}
+	if user == nil {
+		fmt.Println("No user returned for ID:", userID)
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 			"error": "user not found",
 		})
 	}
 
+	fmt.Println("Returning user:", user.ID, user.Username)
 	return c.JSON(fiber.Map{
 		"user": user,
 	})

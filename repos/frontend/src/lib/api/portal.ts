@@ -26,6 +26,7 @@ export async function registerBusiness(
       country,
       countryCode: country.slice(0, 2).toUpperCase(),
     }),
+    credentials: "include"
   });
 
   if (!res.ok) {
