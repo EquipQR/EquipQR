@@ -49,6 +49,7 @@ func RunServer(config utils.Config) {
 	handlers.RegisterHealthRoutes(app)
 	handlers.RegisterUserRoutes(app)
 	handlers.RegisterEquipmentRoutes(app)
+	handlers.RegisterPendingRoutes(app)
 	handlers.RegisterBusinessRoutes(app)
 	handlers.RegisterIssueRoutes(app)
 	handlers.RegisterQRCodeRoutes(app)

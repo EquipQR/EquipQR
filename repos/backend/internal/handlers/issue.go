@@ -9,46 +9,48 @@ import (
 )
 
 func RegisterIssueRoutes(app *fiber.App) {
-	app.Get("/api/issue/:id", func(c *fiber.Ctx) error {
-		id := c.Params("id")
-		issue, err := repositories.GetIssueByID(id)
-		if err != nil {
-			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "issue not found"})
-		}
-		return c.JSON(issue)
-	})
+	app.Get("/api/issue/:id", handleGetIssue)
+	app.Post("/api/issue", utils.ValidateBody[utils.CreateIssueRequest](), handleCreateIssue)
+}
 
-	app.Post("/api/issue", utils.ValidateBody[utils.CreateIssueRequest](), func(c *fiber.Ctx) error {
-		req := c.Locals("body").(utils.CreateIssueRequest)
+func handleGetIssue(c *fiber.Ctx) error {
+	id := c.Params("id")
+	issue, err := repositories.GetIssueByID(id)
+	if err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "issue not found"})
+	}
+	return c.JSON(issue)
+}
 
-		equipmentID, err := uuid.Parse(req.EquipmentID)
-		if err != nil {
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-				"error": "invalid equipment_id",
-			})
-		}
+func handleCreateIssue(c *fiber.Ctx) error {
+	req := c.Locals("body").(utils.CreateIssueRequest)
 
-		assigneeID, err := uuid.Parse(req.AssigneeID)
-		if err != nil {
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-				"error": "invalid assignee_id",
-			})
-		}
+	equipmentID, err := uuid.Parse(req.EquipmentID)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "invalid equipment_id",
+		})
+	}
 
-		issue := models.Issue{
-			Title:       req.Title,
-			Description: req.Description,
-			EquipmentID: equipmentID,
-			AssigneeID:  assigneeID,
-		}
+	assigneeID, err := uuid.Parse(req.AssigneeID)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "invalid assignee_id",
+		})
+	}
 
-		if err := repositories.CreateIssue(&issue); err != nil {
-			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-				"error": "could not create issue",
-			})
-		}
+	issue := models.Issue{
+		Title:       req.Title,
+		Description: req.Description,
+		EquipmentID: equipmentID,
+		AssigneeID:  assigneeID,
+	}
 
-		return c.Status(fiber.StatusCreated).JSON(issue)
-	})
+	if err := repositories.CreateIssue(&issue); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "could not create issue",
+		})
+	}
 
+	return c.Status(fiber.StatusCreated).JSON(issue)
 }

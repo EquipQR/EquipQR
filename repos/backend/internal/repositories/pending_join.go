@@ -6,6 +6,12 @@ import (
 	"github.com/google/uuid"
 )
 
+func GetAllPendingJoinsForBusiness(businessID uuid.UUID) ([]models.PendingJoinRequest, error) {
+	var requests []models.PendingJoinRequest
+	err := database.DB.Where("business_id = ?", businessID).Find(&requests).Error
+	return requests, err
+}
+
 func ApprovePendingJoin(userID uuid.UUID, businessID uuid.UUID) error {
 	_, err := GetPendingJoinRequest(userID, businessID)
 	if err != nil {

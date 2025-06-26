@@ -58,3 +58,12 @@ type CreateIssueRequest struct {
 	EquipmentID string `json:"equipment_id" validate:"required"`
 	AssigneeID  string `json:"assignee_id" validate:"required"`
 }
+
+// ─────────────────────────────────────────────
+// Pending-related requests
+// ─────────────────────────────────────────────
+
+type ApproveJoinRequest struct {
+	UserID     string `json:"userId"`
+	BusinessID string `json:"businessId"`
+}

@@ -15,16 +15,6 @@ func GetIssueByID(id string) (*models.Issue, error) {
 	return &issue, nil
 }
 
-func GetIssuesByEquipmentID(equipmentID string) ([]models.Issue, error) {
-	var issues []models.Issue
-
-	if err := database.DB.Where("equipment_id = ?", equipmentID).Find(&issues).Error; err != nil {
-		return nil, err
-	}
-
-	return issues, nil
-}
-
 func CreateIssue(issue *models.Issue) error {
 	return database.DB.Create(issue).Error
 }

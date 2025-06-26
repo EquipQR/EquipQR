@@ -11,64 +11,81 @@ import (
 )
 
 func RegisterBusinessRoutes(app *fiber.App) {
-	app.Get("/api/business/:id", func(c *fiber.Ctx) error {
-		id := c.Params("id")
+	app.Get("/api/business/:id", getBusinessByID)
+	app.Get("/api/businesses", listBusinessesPaginated)
+	app.Post("/api/business", utils.ValidateBody[utils.CreateBusinessRequest](), createBusiness)
+}
 
-		business, err := repositories.GetBusinessByID(id)
-		if err != nil {
-			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "business not found"})
-		}
+func getBusinessByID(c *fiber.Ctx) error {
+	id := c.Params("id")
 
-		memberCount, err := repositories.CountBusinessMembers(id)
-		if err != nil {
-			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "failed to count members"})
-		}
-
-		return c.JSON(fiber.Map{
-			"id":              business.ID,
-			"businessName":    business.BusinessName,
-			"businessType":    business.Type,
-			"userCanRegister": business.UserCanRegister,
-			"loginMethods":    business.LoginMethods,
-			"memberCount":     memberCount,
+	business, err := repositories.GetBusinessByID(id)
+	if err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"error": "business not found",
 		})
+	}
+
+	memberCount, err := repositories.CountBusinessMembers(id)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "failed to count members",
+		})
+	}
+
+	return c.JSON(fiber.Map{
+		"id":              business.ID,
+		"businessName":    business.BusinessName,
+		"businessType":    business.Type,
+		"userCanRegister": business.UserCanRegister,
+		"loginMethods":    business.LoginMethods,
+		"memberCount":     memberCount,
 	})
+}
 
-	app.Get("/api/businesses", func(c *fiber.Ctx) error {
-		pageParam := c.Query("page", "1")
-		limitParam := c.Query("limit", "10")
+func listBusinessesPaginated(c *fiber.Ctx) error {
+	pageParam := c.Query("page", "1")
+	limitParam := c.Query("limit", "10")
 
-		page, err := strconv.Atoi(pageParam)
-		if err != nil || page < 1 {
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid page number"})
-		}
+	page, err := strconv.Atoi(pageParam)
+	if err != nil || page < 1 {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "invalid page number",
+		})
+	}
 
-		limit, err := strconv.Atoi(limitParam)
-		if err != nil || limit < 1 {
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid limit number"})
-		}
+	limit, err := strconv.Atoi(limitParam)
+	if err != nil || limit < 1 {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "invalid limit number",
+		})
+	}
 
-		offset := (page - 1) * limit
-		businesses, err := repositories.GetBusinessesPaginated(limit, offset)
-		if err != nil {
-			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "failed to fetch businesses"})
-		}
+	offset := (page - 1) * limit
 
-		return c.JSON(businesses)
-	})
+	businesses, err := repositories.GetBusinessesPaginated(limit, offset)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "failed to fetch businesses",
+		})
+	}
 
-	app.Post("/api/business", utils.ValidateBody[utils.CreateBusinessRequest](), func(c *fiber.Ctx) error {
-		req := c.Locals("body").(utils.CreateBusinessRequest)
+	return c.JSON(businesses)
+}
 
-		business := models.Business{
-			ID:           uuid.New(),
-			BusinessName: req.BusinessName,
-		}
+func createBusiness(c *fiber.Ctx) error {
+	req := c.Locals("body").(utils.CreateBusinessRequest)
 
-		if err := repositories.CreateBusiness(&business); err != nil {
-			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "could not create business"})
-		}
+	business := models.Business{
+		ID:           uuid.New(),
+		BusinessName: req.BusinessName,
+	}
 
-		return c.Status(fiber.StatusCreated).JSON(business)
-	})
+	if err := repositories.CreateBusiness(&business); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "could not create business",
+		})
+	}
+
+	return c.Status(fiber.StatusCreated).JSON(business)
 }
