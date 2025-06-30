@@ -1,12 +1,12 @@
 import { writable, derived, get } from 'svelte/store';
-import type { 
-  PendingRegistration, 
-  FilterState, 
-  PaginationState, 
-  SortState, 
-  BulkAction, 
+import type {
+  PendingRegistration,
+  FilterState,
+  PaginationState,
+  SortState,
+  BulkAction,
   InviteOptions,
-  AdminStats 
+  AdminStats
 } from '../types/admin.js';
 
 // Core data stores
@@ -50,7 +50,7 @@ export const filteredRegistrations = derived(
     // Apply search filter
     if ($filters.search) {
       const searchLower = $filters.search.toLowerCase();
-      filtered = filtered.filter(reg => 
+      filtered = filtered.filter(reg =>
         reg.user.username.toLowerCase().includes(searchLower) ||
         reg.user.email.toLowerCase().includes(searchLower)
       );
@@ -59,7 +59,7 @@ export const filteredRegistrations = derived(
     // Apply email filter
     if ($filters.email) {
       const emailLower = $filters.email.toLowerCase();
-      filtered = filtered.filter(reg => 
+      filtered = filtered.filter(reg =>
         reg.user.email.toLowerCase().includes(emailLower)
       );
     }
@@ -82,7 +82,7 @@ export const filteredRegistrations = derived(
     // Apply sorting
     filtered.sort((a, b) => {
       let aValue: any, bValue: any;
-      
+
       switch ($sort.column) {
         case 'created_at':
           aValue = new Date(a.created_at);
@@ -147,27 +147,27 @@ export const registrationActions = {
   async loadRegistrations(businessId: string) {
     loading.set(true);
     error.set(null);
-    
+
     try {
       const response = await fetch(`/api/pending/${businessId}`, {
         credentials: 'include'
       });
-      
+
       if (!response.ok) {
         throw new Error('Failed to load registrations');
       }
-      
+
       const data = await response.json();
-      
+
       // Calculate urgency and days pending
       const processedData = data.map((reg: any) => ({
         ...reg,
         days_pending: Math.floor((Date.now() - new Date(reg.created_at).getTime()) / (1000 * 60 * 60 * 24)),
         urgency_level: calculateUrgencyLevel(reg.created_at)
       }));
-      
+
       registrations.set(processedData);
-      
+
       // Update pagination
       const currentPagination = get(pagination);
       const totalPages = Math.ceil(processedData.length / currentPagination.pageSize);
@@ -176,7 +176,7 @@ export const registrationActions = {
         total: processedData.length,
         totalPages
       }));
-      
+
     } catch (err) {
       error.set(err instanceof Error ? err.message : 'Unknown error occurred');
     } finally {
@@ -186,7 +186,7 @@ export const registrationActions = {
 
   async approveRegistration(registrationId: string) {
     actionLoading.update(state => ({ ...state, [registrationId]: true }));
-    
+
     try {
       const response = await fetch('/api/pending/approve', {
         method: 'POST',
@@ -194,15 +194,15 @@ export const registrationActions = {
         credentials: 'include',
         body: JSON.stringify({ request_id: registrationId })
       });
-      
+
       if (!response.ok) {
         throw new Error('Failed to approve registration');
       }
-      
+
       // Remove from local state
       registrations.update(regs => regs.filter(r => r.id !== registrationId));
       selectedIds.update(ids => ids.filter(id => id !== registrationId));
-      
+
     } catch (err) {
       error.set(err instanceof Error ? err.message : 'Failed to approve registration');
     } finally {
@@ -212,7 +212,7 @@ export const registrationActions = {
 
   async denyRegistration(registrationId: string) {
     actionLoading.update(state => ({ ...state, [registrationId]: true }));
-    
+
     try {
       const response = await fetch('/api/pending/deny', {
         method: 'POST',
@@ -220,15 +220,15 @@ export const registrationActions = {
         credentials: 'include',
         body: JSON.stringify({ request_id: registrationId })
       });
-      
+
       if (!response.ok) {
         throw new Error('Failed to deny registration');
       }
-      
+
       // Remove from local state
       registrations.update(regs => regs.filter(r => r.id !== registrationId));
       selectedIds.update(ids => ids.filter(id => id !== registrationId));
-      
+
     } catch (err) {
       error.set(err instanceof Error ? err.message : 'Failed to deny registration');
     } finally {
@@ -238,7 +238,7 @@ export const registrationActions = {
 
   async bulkAction(action: BulkAction) {
     loading.set(true);
-    
+
     try {
       const response = await fetch('/api/pending/bulk-action', {
         method: 'POST',
@@ -246,17 +246,17 @@ export const registrationActions = {
         credentials: 'include',
         body: JSON.stringify(action)
       });
-      
+
       if (!response.ok) {
         throw new Error(`Failed to perform bulk ${action.type}`);
       }
-      
+
       // Remove processed registrations from local state
-      registrations.update(regs => 
+      registrations.update(regs =>
         regs.filter(r => !action.registration_ids.includes(r.id))
       );
       selectedIds.set([]);
-      
+
     } catch (err) {
       error.set(err instanceof Error ? err.message : `Failed to perform bulk ${action.type}`);
     } finally {
@@ -264,26 +264,18 @@ export const registrationActions = {
     }
   },
 
-  async generateInvite(options: InviteOptions): Promise<string> {
-    try {
-      const response = await fetch('/api/invites/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify(options)
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to generate invite');
-      }
-      
-      const data = await response.json();
-      return data.invite_link;
-      
-    } catch (err) {
-      error.set(err instanceof Error ? err.message : 'Failed to generate invite');
-      throw err;
-    }
+  async generateInvite(businessID: string, email: string): Promise<string> {
+    const url = new URL(`/api/pending/${businessID}/invite`, window.location.origin);
+    url.searchParams.set("email", email);
+
+    const response = await fetch(url.toString(), {
+      method: 'GET',
+      credentials: 'include',
+    });
+
+    if (!response.ok) throw new Error('Failed to generate invite');
+    const data = await response.json();
+    return data.invite_link;
   },
 
   // Utility functions
@@ -327,7 +319,7 @@ export const registrationActions = {
 // Helper function to calculate urgency level
 function calculateUrgencyLevel(createdAt: string): 'normal' | 'urgent' | 'critical' {
   const daysPending = Math.floor((Date.now() - new Date(createdAt).getTime()) / (1000 * 60 * 60 * 24));
-  
+
   if (daysPending >= 7) return 'critical';
   if (daysPending >= 3) return 'urgent';
   return 'normal';

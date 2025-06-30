@@ -61,23 +61,19 @@ export async function bulkAction(action: {
   return response.json();
 }
 
-export async function generateInvite(options: {
-  email: string;
-  expirationDays: number;
-  isAdmin: boolean;
-  sendEmail: boolean;
-}) {
-  const response = await fetch('/api/invites/generate', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+export async function generateInvite(businessID: string, email: string): Promise<string> {
+  const url = new URL(`/api/pending/${businessID}/invite`, window.location.origin);
+  url.searchParams.set('email', email);
+
+  const response = await fetch(url.toString(), {
+    method: 'GET',
     credentials: 'include',
-    body: JSON.stringify(options)
   });
-  
+
   if (!response.ok) {
     throw new Error('Failed to generate invite');
   }
-  
+
   const data = await response.json();
   return data.invite_link;
 }

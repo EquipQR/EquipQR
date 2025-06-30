@@ -67,3 +67,11 @@ type ApproveJoinRequest struct {
 	UserID     string `json:"userId"`
 	BusinessID string `json:"businessId"`
 }
+
+type InviteParams struct {
+	BusinessID string
+	Token      string
+	Email      string
+	Expiry     string
+	Signature  string
+}

@@ -12,7 +12,7 @@
   import type { InviteOptions } from '../types/admin.js';
   
   export let open = false;
-  export const businessId: string = '';
+  export let businessId: string;
   export let prefilledEmail = '';
   
   const dispatch = createEventDispatcher<{
@@ -58,7 +58,7 @@
         sendEmail
       };
       
-      const link = await registrationActions.generateInvite(options);
+      const link = await registrationActions.generateInvite(businessId, email);
       generatedLink = link;
       showResult = true;
       

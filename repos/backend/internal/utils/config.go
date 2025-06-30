@@ -24,13 +24,21 @@ type Config struct {
 	TimeZone           string
 	JWT_Secret         string
 	JWT_Expiry_Minutes int
+	Inivte_Secret      string
 	Cookie_Expiry_Days int
+	BaseURL            string
 }
 
 func LoadConfigFromEnv() Config {
 	jwtSecret := getEnv("JWT_SECRET", generateRandomBase64(32))
+	inviteSecret := getEnv("INVITE_SECRET", generateRandomBase64(32))
+
 	if jwtSecret == "" {
 		log.Println("WARN: JWT_SECRET not set, generating one-time secret for this session")
+	}
+
+	if inviteSecret == "" {
+		log.Println("WARN: INVITE_SECRET not set, generating one-time secret for this session")
 	}
 
 	jwtExpiryStr := getEnv("JWT_EXPIRY_MINUTES", "15")
@@ -61,7 +69,9 @@ func LoadConfigFromEnv() Config {
 		TimeZone:           getEnv("POSTGRES_TIMEZONE", "UTC"),
 		JWT_Secret:         jwtSecret,
 		JWT_Expiry_Minutes: jwtExpiry,
+		Inivte_Secret:      inviteSecret,
 		Cookie_Expiry_Days: cookieExpiry,
+		BaseURL:            getEnv("BASE_URL", "https://app.equipqr.io"),
 	}
 }
 
