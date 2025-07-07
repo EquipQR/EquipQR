@@ -11,19 +11,20 @@
   import { goto } from "$app/navigation";
   import { logout } from "$lib/api/auth";
 
-  export let loading: boolean = false;
+  const loading: boolean = false;
   export let error: string | undefined;
 
+  // biome-ignore lint/style/useConst: needed for Svelte bind:this
   let videoRef: HTMLVideoElement | null = null;
   let qrScanner: QrScanner | null = null;
   let torchTrack: MediaStreamTrack | null = null;
 
   let hasCamera = true;
-  let cameraError: string = "";
+  let cameraError = "";
   let torchSupported = false;
   let torchEnabled = false;
   let torchError: string | null = null;
-  let cameraReady: boolean = false;
+  let cameraReady = false;
 
   const setupScanner = async () => {
     try {
@@ -56,23 +57,31 @@
         };
       }
 
-      qrScanner = new QrScanner(
-        videoRef!,
-        // @ts-expect-error: result.data is valid
-        async (result) => {
-          const id = result.data;
-          if (id) {
-            await goto("/equipment?scanned=" + id);
+      if (videoRef !== null) {
+        qrScanner = new QrScanner(
+          videoRef,
+          // @ts-expect-error: result.data is valid
+          async (result) => {
+            const id = result.data;
+            if (id) {
+              await goto(`/equipment?scanned=${id}`);
+            }
+          },
+          {
+            highlightScanRegion: true,
+            highlightCodeOutline: true,
+            deviceId: selectedDevice.deviceId,
           }
-        },
-        {
-          highlightScanRegion: true,
-          highlightCodeOutline: true,
-          deviceId: selectedDevice.deviceId,
-        }
-      );
+        );
+      } else {
+        console.error("videoRef is null. Cannot initialize QR scanner.");
+      }
 
-      await qrScanner.start();
+      if (qrScanner !== null) {
+        await qrScanner.start();
+      } else {
+        console.error("QR scanner is not initialized.");
+      }
 
       hasCamera = true;
       cameraError = "";
@@ -112,7 +121,9 @@
 
       const stream = videoRef?.srcObject;
       if (stream instanceof MediaStream) {
-        stream.getTracks().forEach((t: MediaStreamTrack) => t.stop());
+        for (const track of stream.getTracks()) {
+          track.stop();
+        }
       }
     };
   });
