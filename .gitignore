@@ -43,3 +43,11 @@ repos/frontend/node_modules
 repos/frontend/dist
 repos/frontend/dist-ssr
 repos/frontend/*.local
+
+# Built static files from frontend
+repos/backend/web
+repos/backend/tmp
+
+# compiled backend
+repos/backend/main
+repos/backend/equipment_qr

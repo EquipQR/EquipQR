@@ -1,84 +1,64 @@
 package handlers
 
 import (
-	"encoding/json"
-
-	"github.com/EquipQR/equipqr/backend/internal/database/models"
 	"github.com/EquipQR/equipqr/backend/internal/repositories"
 	"github.com/EquipQR/equipqr/backend/internal/utils"
 	"github.com/gofiber/fiber/v2"
-	"gorm.io/datatypes"
 )
 
-type CreateEquipmentRequest struct {
-	BusinessID string `json:"business_id" validate:"required"`
-	Status     string `json:"status" validate:"required,oneof='in service' 'not in service'"`
-	Type       string `json:"type" validate:"required"`
-	Location   string `json:"location"`
-	MoreFields any    `json:"more_fields"`
+func RegisterEquipmentRoutes(app *fiber.App) {
+	app.Get("/api/equipment/:id/issues", getEquipmentIssues)
+	app.Get("/api/equipment/:id", getEquipmentByID)
+	app.Post("/api/equipment", utils.ValidateBody[utils.CreateEquipmentRequest](), createEquipment)
 }
 
-func RegisterEquipmentRoutes(app *fiber.App) {
-	app.Get("/equipment/:id/issues", func(c *fiber.Ctx) error {
-		equipmentID := c.Params("id")
-		issues, err := repositories.GetIssuesByEquipmentID(equipmentID)
-		if err != nil {
-			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "failed to fetch issues"})
-		}
-		return c.JSON(issues)
-	})
+func getEquipmentIssues(c *fiber.Ctx) error {
+	equipmentID := c.Params("id")
+	issues, err := repositories.GetIssuesByEquipmentID(equipmentID)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "failed to fetch issues",
+		})
+	}
+	return c.JSON(issues)
+}
 
-	app.Get("/equipment/:id", func(c *fiber.Ctx) error {
-		id := c.Params("id")
+func getEquipmentByID(c *fiber.Ctx) error {
+	id := c.Params("id")
 
-		eq, err := repositories.GetEquipmentByID(id)
-		if err != nil {
-			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
-				"error": "equipment not found",
-			})
-		}
+	eq, err := repositories.GetEquipmentByID(id)
+	if err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"error": "equipment not found",
+		})
+	}
 
-		return c.JSON(eq)
-	})
+	return c.JSON(eq)
+}
 
-	app.Post("/equipment", utils.ValidateBody[CreateEquipmentRequest](), func(c *fiber.Ctx) error {
-		req := c.Locals("body").(CreateEquipmentRequest)
+func createEquipment(c *fiber.Ctx) error {
+	req := c.Locals("body").(utils.CreateEquipmentRequest)
 
-		_, err := repositories.GetBusinessByID(req.BusinessID)
-		if err != nil {
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-				"error": "business not found",
-			})
-		}
+	moreFields, ok := req.MoreFields.(map[string]any)
+	if !ok {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "more_fields must be an object",
+		})
+	}
 
-		moreFieldsJSON, err := json.Marshal(req.MoreFields)
-		if err != nil {
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-				"error": "invalid more_fields format",
-			})
-		}
+	equipment, err := repositories.CreateEquipmentEntry(
+		req.BusinessID,
+		req.Status,
+		req.Type,
+		req.Location,
+		moreFields,
+	)
 
-		equipment := models.Equipment{
-			BusinessID: req.BusinessID,
-			Status:     req.Status,
-			Type:       req.Type,
-			Location:   req.Location,
-			MoreFields: datatypes.JSON(moreFieldsJSON),
-		}
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
 
-		if err := repositories.CreateEquipment(&equipment); err != nil {
-			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-				"error": "could not create equipment",
-			})
-		}
-
-		created, err := repositories.GetEquipmentByID(equipment.ID)
-		if err != nil {
-			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-				"error": "created but failed to load full record",
-			})
-		}
-
-		return c.Status(fiber.StatusCreated).JSON(created)
-	})
+	return c.Status(fiber.StatusCreated).JSON(equipment)
 }
