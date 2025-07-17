@@ -9,7 +9,8 @@
   } from "lucide-svelte";
   import QrScanner from "qr-scanner";
   import { goto } from "$app/navigation";
-  import { logout } from "$lib/api/auth";
+  import { logout, getUserCurrent } from "$lib/api/auth";
+  import { currentUser } from "$lib/api/user";
 
   const loading: boolean = false;
   export let error: string | undefined;
@@ -25,6 +26,7 @@
   let torchEnabled = false;
   let torchError: string | null = null;
   let cameraReady = false;
+  let showUserMenu = false;
 
   const setupScanner = async () => {
     try {
@@ -71,7 +73,7 @@
             highlightScanRegion: true,
             highlightCodeOutline: true,
             deviceId: selectedDevice.deviceId,
-          }
+          },
         );
       } else {
         console.error("videoRef is null. Cannot initialize QR scanner.");
@@ -114,6 +116,15 @@
 
   onMount(() => {
     setupScanner();
+
+    (async () => {
+      try {
+        const user = await getUserCurrent(fetch);
+        currentUser.set(user);
+      } catch (err) {
+        console.error("Failed to load user:", err);
+      }
+    })();
 
     return () => {
       qrScanner?.destroy();
@@ -183,6 +194,51 @@
         >
           <LogOut class="w-6 h-6" />
         </button>
+      {/if}
+      {#if $currentUser}
+        <div class="relative ml-2">
+          <button
+            onclick={() => (showUserMenu = !showUserMenu)}
+            class="p-3 rounded-full bg-black/60 text-white hover:bg-black/80 transition-all backdrop-blur-sm"
+          >
+            <img
+              src={`https://api.dicebear.com/7.x/initials/svg?seed=${$currentUser.username}`}
+              alt="User Avatar"
+              class="w-6 h-6 rounded-full"
+            />
+          </button>
+
+          {#if showUserMenu}
+            <div
+              class="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-xl z-40 overflow-hidden"
+            >
+              <div class="px-4 py-3 border-b border-neutral-200">
+                <p class="text-sm font-medium text-gray-900">
+                  {$currentUser.username}
+                </p>
+                <p class="text-xs text-gray-500">{$currentUser.email}</p>
+              </div>
+              <button
+                class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                onclick={() => goto("/issues")}
+              >
+                Issues
+              </button>
+              <button
+                class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                onclick={() => goto("/equipment")}
+              >
+                Equipment
+              </button>
+              <button
+                class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                onclick={() => goto("/settings")}
+              >
+                Settings
+              </button>
+            </div>
+          {/if}
+        </div>
       {/if}
     </div>
 

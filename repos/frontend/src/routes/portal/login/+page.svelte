@@ -11,7 +11,7 @@
   import { Button } from "$lib/components/ui/button";
   import { Label } from "$lib/components/ui/label";
   import { Separator } from "$lib/components/ui/separator";
-  import { loginUser, registerUser } from "$lib/api/auth";
+  import { loginUser, registerUser, webauthnLogin } from "$lib/api/auth";
 
   let tab: "login" | "register" = "login";
 
@@ -132,14 +132,24 @@
   }
 </script>
 
-<div class="dark min-h-screen flex items-center justify-center bg-black px-4 py-12 text-white">
-  <div class="w-full max-w-md bg-black rounded-xl shadow-2xl p-8 space-y-6 border border-neutral-800">
+<div
+  class="dark min-h-screen flex items-center justify-center bg-black px-4 py-12 text-white"
+>
+  <div
+    class="w-full max-w-md bg-black rounded-xl shadow-2xl p-8 space-y-6 border border-neutral-800"
+  >
     <div class="text-center space-y-1">
-      <img src="/app_logo_512_412.png" alt="EquipQR Logo" class="mx-auto h-32 w-auto" />
+      <img
+        src="/app_logo_512_412.png"
+        alt="EquipQR Logo"
+        class="mx-auto h-32 w-auto"
+      />
     </div>
 
     <Tabs bind:value={tab}>
-      <TabsList class="w-full grid grid-cols-2 gap-2 bg-neutral-900 rounded-md p-1">
+      <TabsList
+        class="w-full grid grid-cols-2 gap-2 bg-neutral-900 rounded-md p-1"
+      >
         <TabsTrigger
           value="login"
           class="data-[state=active]:bg-black data-[state=active]:text-white rounded-md py-1"
@@ -211,8 +221,18 @@
             }}
           >
             {#if loggingIn}
-              <svg class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 12a8 8 0 018-8" />
+              <svg
+                class="h-4 w-4 animate-spin"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M4 12a8 8 0 018-8"
+                />
               </svg>
             {:else}
               Sign In
@@ -221,19 +241,36 @@
         {/if}
 
         <Separator class="my-6 border-neutral-800" />
-        <p class="text-center text-sm text-neutral-500">Choose another way to login</p>
+        <p class="text-center text-sm text-neutral-500">
+          Choose another way to login
+        </p>
         <div class="flex flex-col gap-2">
           {#each altLoginMethods as method}
             <Button
               variant="outline"
               class="w-full border-neutral-800 text-white hover:bg-neutral-900 transition duration-150 active:scale-95"
+              onclick={async () => {
+                if (method.id === "hardware_token") {
+                  loginError = "";
+                  if (!validateEmail(loginEmail)) {
+                    loginError = "Please enter a valid email first";
+                    return;
+                  }
+                  try {
+                    await webauthnLogin(loginEmail);
+                  } catch (err) {
+                    loginError = (err as Error).message;
+                  }
+                } else {
+                  loginError = "This login method is not yet implemented.";
+                }
+              }}
             >
               {method.label}
             </Button>
           {/each}
         </div>
       </TabsContent>
-
       <TabsContent value="register" class="space-y-4 pt-4">
         <div class="space-y-2">
           <Label for="register-username">Username</Label>
@@ -271,7 +308,11 @@
         <div class="flex items-center space-x-2 pt-2">
           <Checkbox id="tos" bind:checked={agreedToTOS} />
           <label for="tos" class="text-sm text-neutral-400">
-            I agree to the <a href="https://legal.equipqr.io/tos" target="_blank" class="underline hover:text-white">Terms of Service</a>
+            I agree to the <a
+              href="https://legal.equipqr.io/tos"
+              target="_blank"
+              class="underline hover:text-white">Terms of Service</a
+            >
           </label>
         </div>
         {#if registerError}

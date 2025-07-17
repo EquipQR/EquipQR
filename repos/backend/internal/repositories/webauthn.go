@@ -3,6 +3,7 @@ package repositories
 import (
 	"encoding/json"
 	"errors"
+	"log"
 	"net/http"
 
 	"github.com/EquipQR/equipqr/backend/internal/database"
@@ -66,17 +67,30 @@ func FinishWebAuthnRegistration(c *fiber.Ctx) error {
 }
 
 func BeginWebAuthnLogin(email string, c *fiber.Ctx) (*protocol.CredentialAssertion, error) {
+	log.Printf("[WebAuthn] Begin login for email: %s", email)
+
 	user, err := GetUserByEmailWithCredentials(email)
 	if err != nil {
+		log.Printf("[WebAuthn] Failed to find user or load credentials: %v", err)
 		return nil, err
+	}
+
+	if len(user.Credentials) == 0 {
+		log.Printf("[WebAuthn] User %s has no WebAuthn credentials", user.Email)
 	}
 
 	opts, session, err := WebAuthn.BeginLogin(user)
 	if err != nil {
+		log.Printf("[WebAuthn] Failed to generate login options: %v", err)
 		return nil, err
 	}
 
+	log.Printf("[WebAuthn] Generated login options for user %s", user.Email)
+
 	saveWebAuthnSession(c, user.ID.String(), session)
+	log.Printf("[WebAuthn] Session saved for user ID %s", user.ID.String())
+	log.Printf("[WebAuthn] Session saved for user ID %s", user.ID.String())
+
 	return opts, nil
 }
 

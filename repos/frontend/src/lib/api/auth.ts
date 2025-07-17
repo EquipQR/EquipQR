@@ -1,4 +1,8 @@
 import { goto } from "$app/navigation";
+import {
+  startAuthentication,
+  startRegistration,
+} from "@simplewebauthn/browser";
 
 export async function loginUser(
   loginEmail: string,
@@ -80,4 +84,41 @@ export async function logout(): Promise<void> {
   } finally {
     await goto("/portal/login");
   }
+}
+
+export async function webauthnLogin(email: string): Promise<void> {
+  const res = await fetch("/api/auth/webauthn/login/begin", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email }),
+    credentials: "include",
+  });
+
+  if (!res.ok) {
+    const data = await res.json();
+    throw new Error(data.error || "WebAuthn login start failed");
+  }
+
+  const options = await res.json();
+
+  let assertion;
+  try {
+    assertion = await startAuthentication(options);
+  } catch (err) {
+    throw new Error("WebAuthn interaction failed: " + (err as Error).message);
+  }
+
+  const verifyRes = await fetch("/api/auth/webauthn/login/finish", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(assertion),
+    credentials: "include",
+  });
+
+  if (!verifyRes.ok) {
+    const data = await verifyRes.json();
+    throw new Error(data.error || "WebAuthn login failed");
+  }
+
+  await goto("/");
 }
