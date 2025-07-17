@@ -1,7 +1,7 @@
 import { goto } from "$app/navigation";
 import {
   startAuthentication,
-  startRegistration,
+  type AuthenticationResponseJSON,
 } from "@simplewebauthn/browser";
 
 export async function loginUser(
@@ -36,7 +36,7 @@ export async function registerUser(
       email: registerEmail,
       password: registerPassword,
     }),
-    credentials: "include"
+    credentials: "include",
   });
 
   if (!res.ok) {
@@ -58,7 +58,7 @@ export async function getUserCurrent(fetchFn: typeof fetch): Promise<{
   const res = await fetchFn("/api/user", {
     method: "GET",
     headers: { Accept: "application/json" },
-    credentials: "include"
+    credentials: "include",
   });
   if (res.status === 401 || res.status === 403) {
     throw new Error("Unauthorized");
@@ -101,11 +101,11 @@ export async function webauthnLogin(email: string): Promise<void> {
 
   const options = await res.json();
 
-  let assertion;
+  let assertion: AuthenticationResponseJSON;
   try {
     assertion = await startAuthentication(options);
   } catch (err) {
-    throw new Error("WebAuthn interaction failed: " + (err as Error).message);
+    throw new Error(`WebAuthn interaction failed: ${(err as Error).message}`);
   }
 
   const verifyRes = await fetch("/api/auth/webauthn/login/finish", {
