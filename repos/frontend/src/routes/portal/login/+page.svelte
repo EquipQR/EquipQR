@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { tick } from "svelte";
+  import { onMount, tick } from "svelte";
   import {
     Tabs,
     TabsList,
@@ -47,6 +47,39 @@
     return password.length >= 8 && specialCharRegex.test(password);
   }
 
+  function saveLoginEmailToLocalStorage(email: string): void {
+    const key = "equipqr_recent_emails";
+    const existing = localStorage.getItem(key);
+    const parsed: string[] = existing ? JSON.parse(existing) : [];
+
+    const updated = [email, ...parsed.filter((e) => e !== email)].slice(0, 5);
+    localStorage.setItem(key, JSON.stringify(updated));
+  }
+
+  function getRecentEmailsFromLocalStorage(): string[] {
+    const key = "equipqr_recent_emails";
+    const existing = localStorage.getItem(key);
+    return existing ? JSON.parse(existing) : [];
+  }
+
+  function removeEmailFromLocalStorage(email: string): void {
+    const localStorageKey = "equipqr_recent_emails";
+    const existing = localStorage.getItem(localStorageKey);
+    const parsed: string[] = existing ? JSON.parse(existing) : [];
+    const updated = parsed.filter((e) => e !== email);
+    localStorage.setItem(localStorageKey, JSON.stringify(updated));
+    recentEmails = updated;
+  }
+
+  let recentEmails: string[] = [];
+
+  onMount(() => {
+    recentEmails = getRecentEmailsFromLocalStorage();
+    if (recentEmails.length > 0 && !loginEmail) {
+      loginEmail = recentEmails[0];
+    }
+  });
+
   async function continueToPassword(): Promise<void> {
     loginError = "";
     if (!loginEmail.trim()) {
@@ -81,6 +114,7 @@
 
     try {
       await loginUser(loginEmail, loginPassword);
+      saveLoginEmailToLocalStorage(loginEmail);
     } catch (err) {
       loginError = (err as Error).message;
     }
@@ -110,6 +144,7 @@
 
     try {
       await registerUser(registerUsername, registerEmail, registerPassword);
+      saveLoginEmailToLocalStorage(registerEmail);
     } catch (err) {
       registerError = (err as Error).message;
     }
@@ -166,7 +201,46 @@
 
       <TabsContent value="login" class="space-y-4 pt-4">
         {#if loginStep === "email"}
-          <div class="space-y-2">
+          {#if recentEmails.length > 0}
+            <div class="space-y-2 w-full">
+              <Label>Recently used accounts</Label>
+              <div class="flex flex-col gap-2 w-full">
+                {#each recentEmails as email}
+                  <div
+                    class="flex w-full items-center justify-between bg-neutral-900 border border-neutral-800 rounded-md px-4 py-2"
+                  >
+                    <button
+                      type="button"
+                      class="text-left text-sm font-mono lowercase text-white truncate"
+                      onclick={() => {
+                        loginEmail = email;
+                        loginError = "";
+                      }}
+                    >
+                      {email}
+                    </button>
+                    <button
+                      type="button"
+                      class="text-neutral-500 hover:text-red-400 text-xs ml-4"
+                      onclick={() => {
+                        const key = "equipqr_recent_emails";
+                        const existing = localStorage.getItem(key);
+                        const parsed: string[] = existing
+                          ? JSON.parse(existing)
+                          : [];
+                        const updated = parsed.filter((e) => e !== email);
+                        localStorage.setItem(key, JSON.stringify(updated));
+                        recentEmails = updated;
+                      }}
+                    >
+                      Remove
+                    </button>
+                  </div>
+                {/each}
+              </div>
+            </div>
+          {/if}
+          <div class="space-y-2 pt-4">
             <Label for="email">Email</Label>
             <Input
               id="email"
