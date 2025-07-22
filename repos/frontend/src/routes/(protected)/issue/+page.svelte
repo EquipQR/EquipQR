@@ -1,6 +1,5 @@
 <script lang="ts">
   import { ArrowLeft, Send } from "lucide-svelte";
-  import { v4 as uuidv4 } from "uuid";
   import { Button } from "$lib/components/ui/button";
   import {
     Card,
@@ -12,8 +11,10 @@
   import { Textarea } from "$lib/components/ui/textarea";
   import { Skeleton } from "$lib/components/ui/skeleton";
   import { Separator } from "$lib/components/ui/separator";
-  import type { Issue } from "$lib/types/issue";
   import { goto } from "$app/navigation";
+  import type { Issue } from "$lib/types/issue";
+  import type { CreateIssueRequest } from "$lib/types/issue";
+  import { createIssue } from "$lib/api/issue";
 
   export let data: {
     equipmentId: string | null;
@@ -23,40 +24,53 @@
   let error: string | null = null;
   let success = false;
 
-  let formData: Omit<Issue, "id" | "date_submitted" | "assignee_id"> & {
-    assignee_id: string | null;
-  } = {
+  const formData: Omit<Issue, "id" | "date_submitted"> = {
     title: "",
     description: "",
     progress: "new",
     equipment_id: data.equipmentId ?? "",
-    assignee_id: null,
   };
 
+  
   async function submitIssue(): Promise<void> {
-    if (!formData.title.trim() || !formData.description.trim()) {
+    console.log("[submitIssue] ⚙️ Submit function called");
+
+    // Trim and validate basic inputs
+    const title = formData.title.trim();
+    const description = formData.description.trim();
+    const equipmentId = formData.equipment_id?.trim();
+
+    if (!title || !description) {
       error = "Title and description are required.";
+      console.warn("[submitIssue] ❌ Missing title/description");
+      return;
+    }
+
+    if (!equipmentId) {
+      error = "Missing equipment ID.";
+      console.warn("[submitIssue] ❌ Missing equipmentId");
       return;
     }
 
     submitting = true;
     error = null;
+
     try {
-      const newIssue: Issue = {
-        id: uuidv4(),
-        title: formData.title,
-        description: formData.description,
-        progress: formData.progress,
-        equipment_id: formData.equipment_id,
-        assignee_id: formData.assignee_id ?? "unassigned",
-        date_submitted: new Date().toISOString(),
+      const payload: CreateIssueRequest = {
+        title,
+        description,
+        equipmentId,
       };
 
-      // await postNewIssue(newIssue); // implement this in your API
-      console.log("Submitted Issue:", newIssue);
+      console.log("[submitIssue] 📦 Sending payload:", payload);
+
+      const res = await createIssue(payload);
+      console.log("[submitIssue] ✅ Server response:", res);
+
       success = true;
     } catch (e) {
-      error = "Failed to submit issue.";
+      console.error("[submitIssue] ❌ Error:", e);
+      error = (e as Error).message ?? "Failed to submit issue.";
     } finally {
       submitting = false;
     }

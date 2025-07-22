@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"github.com/EquipQR/equipqr/backend/internal/middleware"
 	"github.com/EquipQR/equipqr/backend/internal/repositories"
 	"github.com/EquipQR/equipqr/backend/internal/utils"
 	"github.com/gofiber/fiber/v2"
@@ -8,10 +9,11 @@ import (
 )
 
 func RegisterPendingRoutes(app *fiber.App) {
-	app.Get("/api/pending/:businessID", getPendingJoinRequests)
-	app.Post("/api/pending/approve", approvePendingJoin)
-	app.Get("/api/pending/:businessID/invite", GenerateInviteLinkHandler)
-	app.Get("/api/invite/accept", AcceptInviteHandler)
+	app.Get("/api/pending/:businessID", middleware.RequireUser, getPendingJoinRequests)
+	app.Post("/api/pending/approve", middleware.RequireUser, approvePendingJoin)
+	app.Post("/api/pending/deny", middleware.RequireUser, denyPendingJoin)
+	app.Get("/api/pending/:businessID/invite", middleware.RequireUser, GenerateInviteLinkHandler)
+	app.Get("/api/invite/accept", middleware.RequireUser, AcceptInviteHandler)
 }
 
 func getPendingJoinRequests(c *fiber.Ctx) error {
@@ -55,6 +57,34 @@ func approvePendingJoin(c *fiber.Ctx) error {
 	if err := repositories.ApprovePendingJoin(requestID); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "failed to approve request",
+		})
+	}
+
+	return c.SendStatus(fiber.StatusNoContent)
+}
+
+func denyPendingJoin(c *fiber.Ctx) error {
+	type DenyJoinRequest struct {
+		RequestID string `json:"request_id"`
+	}
+
+	var req DenyJoinRequest
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "invalid request body",
+		})
+	}
+
+	requestID, err := uuid.Parse(req.RequestID)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "invalid request ID",
+		})
+	}
+
+	if err := repositories.DenyPendingJoin(requestID); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "failed to deny request",
 		})
 	}
 

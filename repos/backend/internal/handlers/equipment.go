@@ -1,15 +1,16 @@
 package handlers
 
 import (
+	"github.com/EquipQR/equipqr/backend/internal/middleware"
 	"github.com/EquipQR/equipqr/backend/internal/repositories"
 	"github.com/EquipQR/equipqr/backend/internal/utils"
 	"github.com/gofiber/fiber/v2"
 )
 
 func RegisterEquipmentRoutes(app *fiber.App) {
-	app.Get("/api/equipment/:id/issues", getEquipmentIssues)
-	app.Get("/api/equipment/:id", getEquipmentByID)
-	app.Post("/api/equipment", utils.ValidateBody[utils.CreateEquipmentRequest](), createEquipment)
+	app.Get("/api/equipment/:id/issues", middleware.RequireUser, getEquipmentIssues)
+	app.Get("/api/equipment/:id", middleware.RequireUser, getEquipmentByID)
+	app.Post("/api/equipment", middleware.RequireUser, utils.ValidateBody[utils.CreateEquipmentRequest](), createEquipment)
 }
 
 func getEquipmentIssues(c *fiber.Ctx) error {

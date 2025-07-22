@@ -22,7 +22,12 @@ func GetUserByID(id string) (*models.User, error) {
 func GetUserByEmail(email string) (*models.User, error) {
 	var user models.User
 
-	if err := database.DB.First(&user, "email = ?", email).Error; err != nil {
+	err := database.DB.
+		Preload("Credentials").
+		Where("email = ?", email).
+		First(&user).Error
+
+	if err != nil {
 		return nil, err
 	}
 

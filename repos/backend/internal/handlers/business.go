@@ -4,6 +4,7 @@ import (
 	"strconv"
 
 	"github.com/EquipQR/equipqr/backend/internal/database/models"
+	"github.com/EquipQR/equipqr/backend/internal/middleware"
 	"github.com/EquipQR/equipqr/backend/internal/repositories"
 	"github.com/EquipQR/equipqr/backend/internal/utils"
 	"github.com/gofiber/fiber/v2"
@@ -11,9 +12,9 @@ import (
 )
 
 func RegisterBusinessRoutes(app *fiber.App) {
-	app.Get("/api/business/:id", getBusinessByID)
-	app.Get("/api/businesses", listBusinessesPaginated)
-	app.Post("/api/business", utils.ValidateBody[utils.CreateBusinessRequest](), createBusiness)
+	app.Get("/api/business/:id", middleware.RequireUser, getBusinessByID)
+	app.Get("/api/businesses", middleware.RequireUser, listBusinessesPaginated)
+	app.Post("/api/business", middleware.RequireUser, utils.ValidateBody[utils.CreateBusinessRequest](), createBusiness)
 }
 
 func getBusinessByID(c *fiber.Ctx) error {

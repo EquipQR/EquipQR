@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"github.com/EquipQR/equipqr/backend/internal/repositories"
+	"github.com/EquipQR/equipqr/backend/internal/utils"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -16,18 +17,22 @@ func RegisterWebAuthnRoutes(app *fiber.App) {
 }
 
 func beginRegistration(c *fiber.Ctx) error {
-	type body struct {
-		UserID string `json:"user_id"`
+	userID, err := utils.ValidateJWTFromCookie(c)
+	if err != nil || userID == "" {
+		return c.Status(fiber.StatusForbidden).JSON(fiber.Map{
+			"error": "unauthorized",
+		})
 	}
-	var input body
-	if err := c.BodyParser(&input); err != nil {
-		return c.Status(400).JSON(fiber.Map{"error": "invalid request"})
-	}
+	print("hello")
+	options, err := repositories.BeginWebAuthnRegistration(userID, c)
+	print("hello")
 
-	options, err := repositories.BeginWebAuthnRegistration(input.UserID, c)
 	if err != nil {
-		return c.Status(500).JSON(fiber.Map{"error": "failed to begin registration"})
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "failed to begin registration",
+		})
 	}
+	print("hello")
 
 	return c.JSON(options)
 }

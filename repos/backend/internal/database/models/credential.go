@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 
+	"github.com/duo-labs/webauthn/webauthn"
 	"github.com/google/uuid"
 )
 
@@ -18,7 +19,19 @@ type Credential struct {
 	CloneWarning    bool      `gorm:"not null" json:"clone_warning"`
 }
 
-// MarshalJSON makes Credential safely JSON-serializable
+func (c Credential) ToWebAuthn() webauthn.Credential {
+	return webauthn.Credential{
+		ID:              c.CredentialID,
+		PublicKey:       c.PublicKey,
+		AttestationType: c.AttestationType,
+		Authenticator: webauthn.Authenticator{
+			AAGUID:       c.AAGUID,
+			SignCount:    c.SignCount,
+			CloneWarning: c.CloneWarning,
+		},
+	}
+}
+
 func (c Credential) MarshalJSON() ([]byte, error) {
 	type Alias Credential
 	return json.Marshal(&struct {

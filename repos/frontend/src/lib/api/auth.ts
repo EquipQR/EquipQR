@@ -87,6 +87,8 @@ export async function logout(): Promise<void> {
 }
 
 export async function webauthnLogin(email: string): Promise<void> {
+  console.log("🔐 Starting WebAuthn login for:", email);
+
   const res = await fetch("/api/auth/webauthn/login/begin", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -96,29 +98,42 @@ export async function webauthnLogin(email: string): Promise<void> {
 
   if (!res.ok) {
     const data = await res.json();
+    console.error("❌ Failed to start WebAuthn login:", data);
     throw new Error(data.error || "WebAuthn login start failed");
   }
 
-  const options = await res.json();
+  const { publicKey } = await res.json();
+  console.log("🛠️ Parsed PublicKey options:", publicKey);
+
+  if (!publicKey || !publicKey.challenge) {
+    console.error("❌ Invalid PublicKeyCredentialRequestOptions:", publicKey);
+    throw new Error("WebAuthn options missing challenge");
+  }
 
   let assertion: AuthenticationResponseJSON;
   try {
-    assertion = await startAuthentication(options);
+    assertion = await startAuthentication(publicKey);
+    console.log("✅ Got authentication assertion:", assertion);
+    console.log("📌 Assertion Credential ID:", assertion.id);
+
   } catch (err) {
+    console.error("❌ WebAuthn browser interaction failed:", err);
     throw new Error(`WebAuthn interaction failed: ${(err as Error).message}`);
   }
 
   const verifyRes = await fetch("/api/auth/webauthn/login/finish", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(assertion),
+    body: JSON.stringify({ ...assertion, email }),
     credentials: "include",
   });
 
   if (!verifyRes.ok) {
     const data = await verifyRes.json();
+    console.error("❌ WebAuthn verification failed:", data);
     throw new Error(data.error || "WebAuthn login failed");
   }
 
+  console.log("🎉 WebAuthn login successful");
   await goto("/");
 }

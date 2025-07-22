@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"github.com/EquipQR/equipqr/backend/internal/middleware"
 	"github.com/EquipQR/equipqr/backend/internal/repositories"
 	"github.com/EquipQR/equipqr/backend/internal/utils"
 	"github.com/gofiber/fiber/v2"
@@ -10,7 +11,7 @@ func RegisterUserRoutes(app *fiber.App) {
 	app.Post("/api/auth/login", utils.ValidateBody[utils.LoginRequest](), handleLogin)
 	app.Post("/api/auth/logout", handleLogout)
 	app.Post("/api/auth/register", utils.ValidateBody[utils.CreateUserRequest](), handleRegister)
-	app.Get("/api/user", handleGetUser)
+	app.Get("/api/user", middleware.RequireUser, handleGetUser)
 }
 
 func handleLogin(c *fiber.Ctx) error {
@@ -79,27 +80,7 @@ func handleRegister(c *fiber.Ctx) error {
 }
 
 func handleGetUser(c *fiber.Ctx) error {
-	cookie := c.Cookies("session")
-	if cookie == "" {
-		return c.Status(fiber.StatusForbidden).JSON(fiber.Map{
-			"error": "unauthorized",
-		})
-	}
-
-	userID, err := utils.ValidateJWTFromCookie(c)
-	if err != nil || userID == "" {
-		return c.Status(fiber.StatusForbidden).JSON(fiber.Map{
-			"error": "unauthorized",
-		})
-	}
-
-	user, err := repositories.GetUserByID(userID)
-	if err != nil || user == nil {
-		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
-			"error": "user not found",
-		})
-	}
-
+	user := c.Locals("user")
 	return c.JSON(fiber.Map{
 		"user": user,
 	})

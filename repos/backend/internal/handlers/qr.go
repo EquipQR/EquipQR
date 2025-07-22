@@ -1,13 +1,14 @@
 package handlers
 
 import (
+	"github.com/EquipQR/equipqr/backend/internal/middleware"
 	"github.com/EquipQR/equipqr/backend/internal/repositories"
 	"github.com/gofiber/fiber/v2"
 )
 
 func RegisterQRCodeRoutes(app *fiber.App) {
-	app.Post("/api/generate-qr-zip", generateQRCodeZip)
-	app.Post("/api/generate-qr", generateSingleQRCode)
+	app.Post("/api/generate-qr-zip", middleware.RequireUser, generateQRCodeZip)
+	app.Post("/api/generate-qr", middleware.RequireUser, generateSingleQRCode)
 }
 
 func generateQRCodeZip(c *fiber.Ctx) error {

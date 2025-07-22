@@ -43,7 +43,7 @@ func RunServer(config utils.Config) {
 	app := fiber.New(fiber.Config{
 		AppName:               "EquipQR",
 		ServerHeader:          "EquipQR-Server",
-		DisableStartupMessage: true, // ← disables Fiber's built-in log
+		DisableStartupMessage: true,
 	})
 
 	app.Use(cors.New(cors.Config{
@@ -76,6 +76,9 @@ func RunServer(config utils.Config) {
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 
+	// Start frontend hash checker in background
+	go startFrontendHashChecker(config)
+
 	go func() {
 		if err := app.ListenTLS(address, config.SSL_CertPath, config.SSL_KeyPath); err != nil {
 			log.Printf("❌ Fiber ListenTLS error: %v\n", err)
@@ -98,32 +101,68 @@ func RunServer(config utils.Config) {
 	log.Println("✅ Server gracefully stopped")
 }
 
+var (
+	lastFrontendHash      string
+	lastFrontendError     string
+	mismatchWarnedAlready bool
+	mismatchReminderTimer time.Time
+)
+
 func checkFrontendHash() {
 	srcPath := "../frontend/src"
 	hashPath := "./web/.frontend_build_hash"
 
 	hash, err := calculateDirectoryHash(srcPath)
 	if err != nil {
-		log.Printf("⚠️  Could not hash frontend source: %v\n", err)
+		msg := fmt.Sprintf("⚠️  Could not hash frontend source: %v", err)
+		if msg != lastFrontendError {
+			log.Println(msg)
+			lastFrontendError = msg
+		}
 		return
 	}
 
 	stored, err := os.ReadFile(hashPath)
 	if err != nil {
-		log.Printf("⚠️  Could not read frontend build hash from %s: %v\n", hashPath, err)
+		msg := fmt.Sprintf("⚠️  Could not read frontend build hash from %s: %v", hashPath, err)
+		if msg != lastFrontendError {
+			log.Println(msg)
+			lastFrontendError = msg
+		}
 		return
 	}
 
 	storedHash := string(bytesTrimSpace(stored))
+
 	if storedHash != hash {
-		fmt.Println()
-		fmt.Println("🔁  Frontend build hash mismatch detected!")
-		fmt.Printf("📦  Stored Hash:    %s\n", color.New(color.FgHiRed).Sprint(storedHash))
-		fmt.Printf("📁  Current Source: %s\n", color.New(color.FgHiGreen).Sprint(hash))
-		fmt.Println("⚠️   Rebuild the frontend to match the current source.")
-		fmt.Println()
-	} else {
+		if !mismatchWarnedAlready {
+			fmt.Println()
+			fmt.Println("🔁  Frontend build hash mismatch detected!")
+			fmt.Printf("📦  Stored Hash:    %s\n", color.New(color.FgHiRed).Sprint(storedHash))
+			fmt.Printf("📁  Current Source: %s\n", color.New(color.FgHiGreen).Sprint(hash))
+			fmt.Println("⚠️   Rebuild the frontend to match the current source.")
+			fmt.Println()
+			mismatchWarnedAlready = true
+			mismatchReminderTimer = time.Now()
+		} else if time.Since(mismatchReminderTimer) > 30*time.Second {
+			log.Println("🔁  Frontend still mismatched — waiting on rebuild.")
+			mismatchReminderTimer = time.Now()
+		}
+		lastFrontendHash = "" // invalidate match cache
+	} else if lastFrontendHash != hash {
 		fmt.Printf("✅  Frontend hash verified: %s\n", color.New(color.FgGreen).Sprint(hash))
+		lastFrontendHash = hash
+		lastFrontendError = ""
+		mismatchWarnedAlready = false
+	}
+}
+
+func startFrontendHashChecker(config utils.Config) {
+	interval := time.Duration(config.Verify_Frontend_Hash_Frequency) * time.Second
+
+	for {
+		time.Sleep(interval)
+		checkFrontendHash()
 	}
 }
 
@@ -158,34 +197,89 @@ func bytesTrimSpace(b []byte) string {
 
 func printStartupBanner(config utils.Config) {
 	bold := color.New(color.FgWhite, color.Bold).SprintFunc()
-	section := color.New(color.FgCyan).SprintFunc()
-	key := color.New(color.FgHiBlack).SprintFunc()
-	value := color.New(color.FgGreen).SprintFunc()
 	dim := color.New(color.FgHiBlack).SprintFunc()
 
 	log.Println(bold("🚀 EquipQR server is starting up..."))
 	log.Println(dim("────────────────────────────────────"))
 
-	fmt.Println(section("▸ Server"))
-	fmt.Printf("   %s %s:%s\n", key("Host:         "), value(config.App_Host), value(config.App_Port))
-	fmt.Printf("   %s %s\n", key("TLS Cert:     "), value(config.SSL_CertPath))
-	fmt.Printf("   %s %s\n", key("TLS Key:      "), value(config.SSL_KeyPath))
+	printConfigSection("▸ Server", map[string]string{
+		"Host":     fmt.Sprintf("%s:%s", config.App_Host, config.App_Port),
+		"TLS Cert": config.SSL_CertPath,
+		"TLS Key":  config.SSL_KeyPath,
+	}, nil)
 
-	fmt.Println(section("▸ Database"))
-	fmt.Printf("   %s %s\n", key("Host:         "), value(config.Host))
-	fmt.Printf("   %s %s\n", key("Port:         "), value(config.Port))
-	fmt.Printf("   %s %s\n", key("Name:         "), value(config.Name))
-	fmt.Printf("   %s %s\n", key("User:         "), value(config.User))
-	fmt.Printf("   %s %s\n", key("SSL Mode:     "), value(config.SSLMode))
-	fmt.Printf("   %s %s\n", key("Time Zone:    "), value(config.TimeZone))
+	printConfigSection("▸ Database", map[string]string{
+		"Host":      config.Host,
+		"Port":      config.Port,
+		"Name":      config.Name,
+		"User":      config.User,
+		"SSL Mode":  config.SSLMode,
+		"Time Zone": config.TimeZone,
+	}, nil)
 
-	fmt.Println(section("▸ Auth"))
-	fmt.Printf("   %s %d min\n", key("JWT Expiry:   "), config.JWT_Expiry_Minutes)
-	fmt.Printf("   %s %d days\n", key("Cookie Expiry:"), config.Cookie_Expiry_Days)
+	printConfigSection("▸ Auth", map[string]string{
+		"JWT Expiry":    fmt.Sprintf("%d min", config.JWT_Expiry_Minutes),
+		"Cookie Expiry": fmt.Sprintf("%d days", config.Cookie_Expiry_Days),
+	}, nil)
 
-	fmt.Println(section("▸ CORS"))
-	fmt.Printf("   %s %s\n", key("Allow Origins:"), value(config.CORSAllowOrigins))
-	fmt.Printf("   %s %s\n", key("Allow Headers:"), value(config.CORSAllowHeaders))
+	printConfigSection("▸ CORS", map[string]string{
+		"Allow Origins": config.CORSAllowOrigins,
+		"Allow Headers": config.CORSAllowHeaders,
+	}, nil)
+
+	printConfigSection("▸ Email", map[string]string{
+		"Enabled":       fmt.Sprintf("%t", config.Email_Enabled),
+		"Display Name":  config.Email_Display_Name,
+		"Reply-To":      config.Email_Reply_To,
+		"SMTP Enabled":  fmt.Sprintf("%t", config.Email_SMTP_Enable),
+		"SMTP Address":  config.Email_SMTP_Address,
+		"SMTP Port":     fmt.Sprintf("%d", config.Email_SMPT_Port),
+		"SMTP Username": config.Email_SMPT_Username,
+		"SMTP Password": config.Email_SMPT_Password,
+		"SMTP Domain":   config.Email_SMTP_Domain,
+		"Auth Method":   config.Email_SMTP_Authentication,
+		"StartTLS Auto": fmt.Sprintf("%t", config.Email_SMTP_Enable_StartTLS_Auto),
+		"TLS Required":  fmt.Sprintf("%t", config.Email_SMTP_TLS),
+	}, map[string]bool{
+		"SMTP Username": true,
+		"SMTP Password": true,
+	})
 
 	log.Println(dim("────────────────────────────────────"))
+}
+
+func printConfigSection(title string, settings map[string]string, redactedKeys map[string]bool) {
+	section := color.New(color.FgCyan).SprintFunc()
+	key := color.New(color.FgHiBlack).SprintFunc()
+	value := color.New(color.FgGreen).SprintFunc()
+
+	fmt.Println(section(title))
+	for k, v := range settings {
+		if redactedKeys != nil && redactedKeys[k] {
+			v = redactValue(k, v)
+		}
+		fmt.Printf("   %s %s\n", key(k+":"), value(v))
+	}
+}
+
+func redactValue(key string, val string) string {
+	if val == "" {
+		return ""
+	}
+
+	switch key {
+	case "SMTP Username":
+		parts := strings.Split(val, "@")
+		if len(parts) != 2 {
+			return "[REDACTED]"
+		}
+		username := parts[0]
+		if len(username) > 3 {
+			username = username[:3] + "..."
+		}
+		return fmt.Sprintf("%s@%s", username, parts[1])
+
+	default:
+		return "[REDACTED]"
+	}
 }

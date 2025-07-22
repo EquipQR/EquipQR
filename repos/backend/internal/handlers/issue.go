@@ -1,14 +1,18 @@
 package handlers
 
 import (
+	"log"
+
+	"github.com/EquipQR/equipqr/backend/internal/database/models"
+	"github.com/EquipQR/equipqr/backend/internal/middleware"
 	"github.com/EquipQR/equipqr/backend/internal/repositories"
 	"github.com/EquipQR/equipqr/backend/internal/utils"
 	"github.com/gofiber/fiber/v2"
 )
 
 func RegisterIssueRoutes(app *fiber.App) {
-	app.Get("/api/issue/:id", handleGetIssue)
-	app.Post("/api/issue", utils.ValidateBody[utils.CreateIssueRequest](), handleCreateIssue)
+	app.Get("/api/issue/:id", middleware.RequireUser, handleGetIssue)
+	app.Post("/api/issue", middleware.RequireUser, utils.ValidateBody[utils.CreateIssueRequest](), handleCreateIssue)
 }
 
 func handleGetIssue(c *fiber.Ctx) error {
@@ -24,8 +28,10 @@ func handleGetIssue(c *fiber.Ctx) error {
 
 func handleCreateIssue(c *fiber.Ctx) error {
 	req := c.Locals("body").(utils.CreateIssueRequest)
-
-	issue, err := repositories.CreateIssueFromRequest(req)
+	user := c.Locals("user").(*models.User)
+	userID := user.ID
+	log.Println("User Id:", userID)
+	issue, err := repositories.CreateIssueFromRequest(req, userID)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": err.Error(),

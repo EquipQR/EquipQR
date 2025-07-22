@@ -17,6 +17,7 @@ func main() {
 	}
 
 	config := utils.LoadConfigFromEnv()
+	utils.SendEmail("justinpitera@gmail.com", "test", "test")
 	repositories.InitWebAuthn()
 	server.RunServer(config)
 }

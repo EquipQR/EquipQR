@@ -39,6 +39,19 @@ func ApprovePendingJoin(requestID uuid.UUID) error {
 	return nil
 }
 
+func DenyPendingJoin(requestID uuid.UUID) error {
+	_, err := GetPendingJoinRequestByID(requestID)
+	if err != nil {
+		return err
+	}
+
+	if err := DeletePendingJoinRequestByID(requestID); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func GetPendingJoinRequestByID(id uuid.UUID) (*models.PendingJoinRequest, error) {
 	var req models.PendingJoinRequest
 	err := database.DB.First(&req, "id = ?", id).Error

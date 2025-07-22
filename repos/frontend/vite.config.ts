@@ -43,7 +43,6 @@ function postBuildHashPlugin(): Plugin {
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, path.resolve(process.cwd(), "../../"), "");
 
-  console.log(env.VITE_PROXY_TARGET)
   return {
     plugins: [tailwindcss(), sveltekit(), postBuildHashPlugin()],
     server: {

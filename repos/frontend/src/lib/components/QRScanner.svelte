@@ -12,7 +12,7 @@
   import { logout, getUserCurrent } from "$lib/api/auth";
   import { currentUser } from "$lib/api/user";
 
-  const loading: boolean = false;
+  export let loading = false;
   export let error: string | undefined;
 
   // biome-ignore lint/style/useConst: needed for Svelte bind:this
@@ -232,7 +232,7 @@
               </button>
               <button
                 class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                onclick={() => goto("/settings")}
+                onclick={() => goto("/account/settings")}
               >
                 Settings
               </button>

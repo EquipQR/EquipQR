@@ -5,7 +5,6 @@ import type {
   PaginationState,
   SortState,
   BulkAction,
-  InviteOptions,
   AdminStats
 } from '../types/admin.js';
 
