@@ -345,6 +345,7 @@
                 type="file"
                 multiple
                 accept="image/*,video/*"
+                capture
                 on:change={handleFileChange}
                 class="hidden"
               />

@@ -1,8 +1,6 @@
 package handlers
 
 import (
-	"log"
-
 	"github.com/EquipQR/equipqr/backend/internal/database/models"
 	"github.com/EquipQR/equipqr/backend/internal/middleware"
 	"github.com/EquipQR/equipqr/backend/internal/repositories"
@@ -30,7 +28,7 @@ func handleCreateIssue(c *fiber.Ctx) error {
 	req := c.Locals("body").(utils.CreateIssueRequest)
 	user := c.Locals("user").(*models.User)
 	userID := user.ID
-	log.Println("User Id:", userID)
+
 	issue, err := repositories.CreateIssueFromRequest(req, userID)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
