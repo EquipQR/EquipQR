@@ -38,6 +38,7 @@ func RunServer(config utils.Config) {
 		&models.PendingJoinRequest{},
 		&models.Credential{},
 		&models.Issue{},
+		&models.IssueAttachment{},
 		&models.Equipment{},
 	)
 
@@ -65,6 +66,7 @@ func RunServer(config utils.Config) {
 	handlers.RegisterWebAuthnRoutes(app)
 	handlers.RegisterIssueRoutes(app)
 	handlers.RegisterQRCodeRoutes(app)
+	handlers.RegisterMediaRoutes(app)
 
 	app.Static("/", "./web")
 

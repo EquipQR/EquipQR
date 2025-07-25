@@ -1,20 +1,35 @@
 package handlers
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"io"
+	"log"
 	"time"
 
+	"github.com/EquipQR/equipqr/backend/internal/middleware"
 	"github.com/EquipQR/equipqr/backend/internal/s3"
 	"github.com/EquipQR/equipqr/backend/internal/utils"
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 	"github.com/minio/minio-go/v7"
 )
 
-var config = utils.LoadConfigFromEnv()
+func RegisterMediaRoutes(app *fiber.App) {
+	// Single file upload (generic, no issue ID)
+	app.Post("/api/upload", middleware.RequireUser, UploadFile)
+
+	// Multi-file upload for a specific issue
+	app.Post("/api/issue/:id/attachments", middleware.RequireUser, UploadFiles)
+
+	// File download by key
+	app.Get("/files/:key", middleware.RequireUser, GetFile)
+}
 
 func UploadFile(c *fiber.Ctx) error {
+	config := utils.LoadConfigFromEnv()
+
 	bucket := config.MinioBucket
 	fileHeader, err := c.FormFile("file")
 	if err != nil {
@@ -42,7 +57,84 @@ func UploadFile(c *fiber.Ctx) error {
 	})
 }
 
+func UploadFiles(c *fiber.Ctx) error {
+	config := utils.LoadConfigFromEnv()
+
+	bucket := config.MinioBucket
+
+	// ⛳ Extract issue ID from route
+	issueIDStr := c.Params("id")
+	issueID, err := uuid.Parse(issueIDStr)
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "invalid issue ID")
+	}
+	log.Printf("📎 Attaching files to issue: %s", issueID)
+
+	form, err := c.MultipartForm()
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "invalid multipart form")
+	}
+
+	files := form.File["files"]
+	if len(files) == 0 {
+		return fiber.NewError(fiber.StatusBadRequest, "no files provided")
+	}
+
+	type UploadedFile struct {
+		ID       uuid.UUID `json:"id"`
+		Key      string    `json:"key"`
+		URL      string    `json:"url"`
+		FileName string    `json:"file_name"`
+		IssueID  uuid.UUID `json:"issue_id"`
+	}
+
+	var uploaded []UploadedFile
+
+	for _, fileHeader := range files {
+		src, err := fileHeader.Open()
+		if err != nil {
+			return fiber.NewError(fiber.StatusInternalServerError, fmt.Sprintf("could not open file: %s", fileHeader.Filename))
+		}
+		defer src.Close()
+
+		buf := new(bytes.Buffer)
+		if _, err := io.Copy(buf, src); err != nil {
+			return fiber.NewError(fiber.StatusInternalServerError, fmt.Sprintf("could not read file: %s", fileHeader.Filename))
+		}
+		log.Printf("🧪 Uploading file: %s (%d bytes)", fileHeader.Filename, buf.Len())
+
+		objectKey := fmt.Sprintf("%d-%s", time.Now().UnixNano(), fileHeader.Filename)
+		contentType := fileHeader.Header.Get("Content-Type")
+		if contentType == "" {
+			contentType = "application/octet-stream"
+		}
+
+		_, err = s3.Client.PutObject(context.Background(), bucket, objectKey, bytes.NewReader(buf.Bytes()), int64(buf.Len()), minio.PutObjectOptions{
+			ContentType: contentType,
+		})
+		if err != nil {
+			log.Printf("❌ MinIO upload error: %v", err)
+			return fiber.NewError(fiber.StatusInternalServerError, fmt.Sprintf("upload failed for %s: %v", fileHeader.Filename, err))
+		}
+
+		uploaded = append(uploaded, UploadedFile{
+			ID:       uuid.New(),
+			Key:      objectKey,
+			URL:      fmt.Sprintf("/files/%s", objectKey),
+			FileName: fileHeader.Filename,
+			IssueID:  issueID,
+		})
+	}
+
+	log.Printf("✅ Uploaded %d file(s) for issue %s", len(uploaded), issueID)
+
+	return c.JSON(fiber.Map{
+		"uploaded": uploaded,
+	})
+}
+
 func GetFile(c *fiber.Ctx) error {
+	config := utils.LoadConfigFromEnv()
 	bucket := config.MinioBucket
 	key := c.Params("key")
 

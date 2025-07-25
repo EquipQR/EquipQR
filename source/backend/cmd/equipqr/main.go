@@ -17,6 +17,17 @@ func main() {
 	}
 
 	config := utils.LoadConfigFromEnv()
+	to := "justinpitera@gmail.com"
+	subject := "Test Email from EquipQR"
+	body := "Hello! This is a test email from your service."
+
+	if err := utils.SendEmail(to, subject, body); err != nil {
+		log.Fatalf("Failed to send email: %v", err)
+	}
+
+	log.Println("Email sent successfully.")
+
+	log.Println("Email sent successfully.")
 	// utils.SendEmail("justinpitera@gmail.com", "test", "test")
 
 	repositories.InitWebAuthn()

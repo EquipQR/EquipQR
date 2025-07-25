@@ -88,13 +88,14 @@ func GenerateInviteLinkWithEmail(businessID uuid.UUID, email string, secret stri
 }
 
 func ProcessInvite(params utils.InviteParams, userID string) error {
+	config := utils.LoadConfigFromEnv()
 	exp, err := strconv.ParseInt(params.Expiry, 10, 64)
 	if err != nil || time.Now().Unix() > exp {
 		return errors.New("invite expired or invalid expiry format")
 	}
 
 	data := params.BusinessID + ":" + params.Token + ":" + params.Email + ":" + params.Expiry
-	mac := hmac.New(sha256.New, []byte(utils.AppConfig.JWT_Secret)) // reusing JWT secret
+	mac := hmac.New(sha256.New, []byte(config.JWT_Secret)) // reusing JWT secret
 	mac.Write([]byte(data))
 	expectedSig := base64.URLEncoding.EncodeToString(mac.Sum(nil))
 

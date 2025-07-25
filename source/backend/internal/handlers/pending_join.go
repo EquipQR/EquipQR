@@ -92,6 +92,7 @@ func denyPendingJoin(c *fiber.Ctx) error {
 }
 
 func GenerateInviteLinkHandler(c *fiber.Ctx) error {
+	config := utils.LoadConfigFromEnv()
 	businessIDParam := c.Params("businessID")
 	email := c.Query("email")
 
@@ -111,8 +112,8 @@ func GenerateInviteLinkHandler(c *fiber.Ctx) error {
 	link, err := repositories.GenerateInviteLinkWithEmail(
 		businessID,
 		email,
-		utils.AppConfig.JWT_Secret,
-		utils.AppConfig.BaseURL,
+		config.JWT_Secret,
+		config.BaseURL,
 		60, // valid for 60 minutes
 	)
 	if err != nil {

@@ -9,18 +9,17 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-var AppConfig = LoadConfigFromEnv()
-
 type Claims struct {
 	UserID string `json:"username"`
 	jwt.RegisteredClaims
 }
 
 func GenerateJWT(username string) (string, error) {
+	config := LoadConfigFromEnv()
 	claims := Claims{
 		UserID: username,
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Duration(AppConfig.JWT_Expiry_Minutes) * time.Minute)),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Duration(config.JWT_Expiry_Minutes) * time.Minute)),
 		},
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -54,11 +53,13 @@ func ValidateJWT(tokenString string) (string, error) {
 }
 
 func GetJWTSecret() []byte {
-	secret := strings.TrimSpace(AppConfig.JWT_Secret)
+	config := LoadConfigFromEnv()
+	secret := strings.TrimSpace(config.JWT_Secret)
 	return []byte(secret)
 }
 
 func SetOrRemoveSessionCookie(c *fiber.Ctx, token string) {
+	config := LoadConfigFromEnv()
 	cookie := &fiber.Cookie{
 		Name:     "session",
 		Value:    token,
@@ -71,7 +72,7 @@ func SetOrRemoveSessionCookie(c *fiber.Ctx, token string) {
 	if token == "" {
 		cookie.Expires = time.Now().Add(-1 * time.Hour)
 	} else {
-		cookie.Expires = time.Now().Add(time.Duration(AppConfig.Cookie_Expiry_Days) * 24 * time.Hour)
+		cookie.Expires = time.Now().Add(time.Duration(config.Cookie_Expiry_Days) * 24 * time.Hour)
 	}
 
 	c.Cookie(cookie)

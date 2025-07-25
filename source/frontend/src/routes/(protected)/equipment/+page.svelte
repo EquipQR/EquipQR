@@ -2,7 +2,7 @@
   import { onMount, tick } from "svelte";
   import { ArrowLeft, PlusCircle, Plus } from "lucide-svelte";
   import { getEquipmentById, getEquipmentIssuesById } from "$lib/api/equipment";
-  import { createIssue } from "$lib/api/issue";
+  import { createIssueAndUploadFiles } from "$lib/api/issue";
   import { formatKey } from "$lib/utils";
   import type { Equipment } from "$lib/types/equipment";
   import type { Issue } from "$lib/types/issue";
@@ -80,10 +80,11 @@
       title,
       description,
       equipmentId: data.equipmentId,
+      files: mediaFiles,
     };
 
     try {
-      await createIssue(payload);
+      await createIssueAndUploadFiles(payload);
       issues = (await getEquipmentIssuesById(data.equipmentId)) ?? [];
       title = "";
       description = "";

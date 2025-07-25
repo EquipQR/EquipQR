@@ -2,6 +2,7 @@ package utils
 
 import (
 	"fmt"
+	"log"
 	"net/smtp"
 
 	"github.com/resend/resend-go/v2"
@@ -40,13 +41,15 @@ func (s *EmailSender) SendEmail(to string, subject string, htmlBody string) erro
 	return nil
 }
 
-// SendEmail uses either SMTP or Resend depending on AppConfig
+// SendEmail uses either SMTP or Resend depending on config
 func SendEmail(toEmail string, subject string, body string) error {
-	if !AppConfig.Email_Enabled {
+	config := LoadConfigFromEnv()
+	log.Println(config.Email_Enabled)
+	if !config.Email_Enabled {
 		return fmt.Errorf("email sending is disabled in config")
 	}
 
-	if AppConfig.Email_SMTP_Enable {
+	if config.Email_SMTP_Enable {
 		return sendViaSMTP(toEmail, subject, body)
 	}
 
@@ -55,28 +58,29 @@ func SendEmail(toEmail string, subject string, body string) error {
 
 // internal SMTP sender
 func sendViaSMTP(toEmail string, subject string, body string) error {
+	config := LoadConfigFromEnv()
 	auth := smtp.PlainAuth(
 		"",
-		AppConfig.Email_SMPT_Username,
-		AppConfig.Email_SMPT_Password,
-		AppConfig.Email_SMTP_Address,
+		config.Email_SMPT_Username,
+		config.Email_SMPT_Password,
+		config.Email_SMTP_Address,
 	)
 
-	from := fmt.Sprintf("%s <%s>", AppConfig.Email_Display_Name, AppConfig.Email_SMPT_Username)
+	from := fmt.Sprintf("%s <%s>", config.Email_Display_Name, config.Email_SMPT_Username)
 	to := []string{toEmail}
 
 	msg := []byte(fmt.Sprintf(
 		"From: %s\r\nTo: %s\r\nReply-To: %s\r\nSubject: %s\r\n\r\n%s",
 		from,
 		toEmail,
-		AppConfig.Email_Reply_To,
+		config.Email_Reply_To,
 		subject,
 		body,
 	))
 
-	addr := fmt.Sprintf("%s:%d", AppConfig.Email_SMTP_Address, AppConfig.Email_SMPT_Port)
+	addr := fmt.Sprintf("%s:%d", config.Email_SMTP_Address, config.Email_SMPT_Port)
 
-	if err := smtp.SendMail(addr, auth, AppConfig.Email_SMPT_Username, to, msg); err != nil {
+	if err := smtp.SendMail(addr, auth, config.Email_SMPT_Username, to, msg); err != nil {
 		return fmt.Errorf("smtp: failed to send email: %w", err)
 	}
 
@@ -85,10 +89,12 @@ func sendViaSMTP(toEmail string, subject string, body string) error {
 
 // internal Resend sender
 func sendViaResend(toEmail string, subject string, body string) error {
-	if AppConfig.Email_SMPT_Username == "" {
+	config := LoadConfigFromEnv()
+
+	if config.Email_SMPT_Username == "" {
 		return fmt.Errorf("resend: API key (username field) not configured")
 	}
 
-	sender := NewEmailSender(AppConfig.Email_SMPT_Username, AppConfig.Email_Display_Name+" <"+AppConfig.Email_Reply_To+">")
+	sender := NewEmailSender(config.Email_Resend_API_Key, config.Email_Display_Name+" <"+config.Email_Reply_To+">")
 	return sender.SendEmail(toEmail, subject, body)
 }
