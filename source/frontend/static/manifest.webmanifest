@@ -1,0 +1,23 @@
+{
+    "name": "EquipQR",
+    "short_name": "EquipQR",
+    "start_url": "./",
+    "description": "Smart Equipment Error Reporting Made Easy",
+    "display": "standalone",
+    "lang": "en",
+    "scope": "./",
+    "icons": [
+        {
+            "src": "/app_logo_192_192.png",
+            "type": "image/png",
+            "sizes": "192x192"
+        },
+        {
+            "src": "/app_logo_512_512.png",
+            "type": "image/png",
+            "sizes": "512x512"
+        }
+    ],
+    "orientation": "portrait",
+    "background_color": "transparent"
+}
