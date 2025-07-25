@@ -63,6 +63,7 @@ type Config struct {
 	Email_SMTP_Enable_StartTLS_Auto bool
 	Email_SMTP_TLS                  bool
 	Email_Resend_API_Key            string
+	Email_Resend_Enabled            bool
 
 	// S3
 	MinioEndpoint  string
@@ -135,6 +136,7 @@ func LoadConfigFromEnv() Config {
 		Email_SMTP_Enable_StartTLS_Auto: getEnvBool("EMAIL_SMTP_ENABLE_STARTTLS_AUTO", true),
 		Email_SMTP_TLS:                  getEnvBool("EMAIL_SMTP_TLS", true),
 		Email_Resend_API_Key:            getEnv("RESEND_API_KEY", ""),
+		Email_Resend_Enabled:            getEnvBool("RESEND_API_ENABLED", false),
 
 		Development_Mode:               getEnvBool("DEV_MODE", false),
 		Verify_Frontend_Hash:           getEnvBool("VERIFY_FRONTEND_HASH", true),

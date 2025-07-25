@@ -44,7 +44,7 @@ func (s *EmailSender) SendEmail(to string, subject string, htmlBody string) erro
 // SendEmail uses either SMTP or Resend depending on config
 func SendEmail(toEmail string, subject string, body string) error {
 	config := LoadConfigFromEnv()
-	log.Println(config.Email_Enabled)
+
 	if !config.Email_Enabled {
 		return fmt.Errorf("email sending is disabled in config")
 	}
@@ -53,37 +53,44 @@ func SendEmail(toEmail string, subject string, body string) error {
 		return sendViaSMTP(toEmail, subject, body)
 	}
 
+	// fallback to Resend if SMTP is disabled
 	return sendViaResend(toEmail, subject, body)
 }
 
 // internal SMTP sender
 func sendViaSMTP(toEmail string, subject string, body string) error {
 	config := LoadConfigFromEnv()
-	auth := smtp.PlainAuth(
-		"",
-		config.Email_SMPT_Username,
-		config.Email_SMPT_Password,
-		config.Email_SMTP_Address,
-	)
 
-	from := fmt.Sprintf("%s <%s>", config.Email_Display_Name, config.Email_SMPT_Username)
+	if config.Email_SMPT_Username == "" || config.Email_SMPT_Password == "" || config.Email_SMTP_Address == "" {
+		return fmt.Errorf("smtp: incomplete SMTP configuration")
+	}
+
+	fromAddress := config.Email_SMPT_Username
+	fromHeader := fmt.Sprintf("%s <%s>", config.Email_Display_Name, fromAddress)
+	replyTo := config.Email_Reply_To
 	to := []string{toEmail}
 
+	// Build MIME-compliant email message
 	msg := []byte(fmt.Sprintf(
-		"From: %s\r\nTo: %s\r\nReply-To: %s\r\nSubject: %s\r\n\r\n%s",
-		from,
+		"From: %s\r\nTo: %s\r\nReply-To: %s\r\nSubject: %s\r\nMIME-Version: 1.0\r\nContent-Type: text/plain; charset=\"utf-8\"\r\n\r\n%s",
+		fromHeader,
 		toEmail,
-		config.Email_Reply_To,
+		replyTo,
 		subject,
 		body,
 	))
 
 	addr := fmt.Sprintf("%s:%d", config.Email_SMTP_Address, config.Email_SMPT_Port)
+	auth := smtp.PlainAuth("", fromAddress, config.Email_SMPT_Password, config.Email_SMTP_Address)
 
-	if err := smtp.SendMail(addr, auth, config.Email_SMPT_Username, to, msg); err != nil {
-		return fmt.Errorf("smtp: failed to send email: %w", err)
+	log.Printf("[SMTP] Sending email to %s via %s", toEmail, addr)
+
+	if err := smtp.SendMail(addr, auth, fromAddress, to, msg); err != nil {
+		log.Printf("[SMTP] Error sending email: %v", err)
+		return fmt.Errorf("smtp: failed to send email to %s via %s: %w", toEmail, addr, err)
 	}
 
+	log.Printf("[SMTP] Email sent successfully to %s", toEmail)
 	return nil
 }
 
