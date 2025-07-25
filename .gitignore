@@ -16,38 +16,38 @@
 
 # Python files (QR Generator)
 **/__pycache__/
-repos/qr_gen/*.py[oc]
-repos/qr_gen/build/
-repos/qr_gen/dist/
-repos/qr_gen/wheels/
-repos/qr_gen/*.egg-info
+source/qr_gen/*.py[oc]
+source/qr_gen/build/
+source/qr_gen/dist/
+source/qr_gen/wheels/
+source/qr_gen/*.egg-info
 
 # Virtual environment (QR Generator)
-repos/qr_gen/.venv
+source/qr_gen/.venv
 
 # Generated QR codes
 **/equipment_qr.png
 
 # Frontend
 ## Logs
-repos/frontend/logs
-repos/frontend/*.log
-repos/frontend/npm-debug.log*
-repos/frontend/yarn-debug.log*
-repos/frontend/yarn-error.log*
-repos/frontend/pnpm-debug.log*
-repos/frontend/lerna-debug.log*
+source/frontend/logs
+source/frontend/*.log
+source/frontend/npm-debug.log*
+source/frontend/yarn-debug.log*
+source/frontend/yarn-error.log*
+source/frontend/pnpm-debug.log*
+source/frontend/lerna-debug.log*
 
 ## Node_modules and build directories
-repos/frontend/node_modules
-repos/frontend/dist
-repos/frontend/dist-ssr
-repos/frontend/*.local
+source/frontend/node_modules
+source/frontend/dist
+source/frontend/dist-ssr
+source/frontend/*.local
 
 # Built static files from frontend
-repos/backend/web
-repos/backend/tmp
+source/backend/web
+source/backend/tmp
 
 # compiled backend
-repos/backend/main
-repos/backend/equipment_qr
+source/backend/main
+source/backend/equipment_qr
